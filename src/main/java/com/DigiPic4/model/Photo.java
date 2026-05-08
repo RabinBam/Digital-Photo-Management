@@ -1,6 +1,7 @@
 package com.DigiPic4.model;
 
 public class Photo {
+<<<<<<< HEAD
     private int photoId;
     private int albumId;
     private String title;
@@ -37,4 +38,33 @@ public class Photo {
 
     public String getLocationTag()                  { return locationTag; }
     public void setLocationTag(String locationTag)  { this.locationTag = locationTag; }
+=======
+    private int id;
+    private int albumId;
+    private String filePath;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getAlbumId() {
+        return albumId;
+    }
+
+    public void setAlbumId(int albumId) {
+        this.albumId = albumId;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+>>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
 }
