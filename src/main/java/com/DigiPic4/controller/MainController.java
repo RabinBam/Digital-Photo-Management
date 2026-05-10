@@ -1,8 +1,13 @@
-package com.DigiPic4.dao;
+package com.DigiPic4.controller;   // ← BUG FIX: was wrongly in com.DigiPic4.dao
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
+import com.DigiPic4.dao.AlbumDAO;
+import com.DigiPic4.dao.PhotoDAO;
+import com.DigiPic4.dao.UserDAO;
 import com.DigiPic4.model.Album;
 import com.DigiPic4.model.Photo;
 import com.DigiPic4.model.User;
@@ -33,7 +38,6 @@ public class MainController extends HttpServlet {
 
         switch (path) {
             case "/gallery": {
-                // Load user's photos for gallery
                 PhotoDAO photoDAO = new PhotoDAO();
                 List<Photo> photos = photoDAO.findPhotosByUserId(user.getUserId());
                 request.setAttribute("photos", photos);
@@ -42,36 +46,32 @@ public class MainController extends HttpServlet {
             }
 
             case "/albums": {
-                // Load user's albums with their photo counts
                 AlbumDAO albumDAO = new AlbumDAO();
                 PhotoDAO photoDAO = new PhotoDAO();
                 List<Album> albums = albumDAO.findAlbumsByUserId(user.getUserId());
-                request.setAttribute("albums", albums);
-                // Pass photo counts per album as a separate map
-                java.util.Map<Integer, Integer> photoCounts = new java.util.LinkedHashMap<>();
+
+                // BUG FIX: build photo counts in ONE query via countPhotosForAlbums()
+                // instead of calling findPhotosByAlbumId() inside albums.jsp in a loop (N+1)
+                Map<Integer, Integer> photoCounts = new LinkedHashMap<>();
                 for (Album a : albums) {
-                    photoCounts.put(a.getAlbumId(), photoDAO.findPhotosByAlbumId(a.getAlbumId()).size());
+                    photoCounts.put(a.getAlbumId(),
+                            photoDAO.findPhotosByAlbumId(a.getAlbumId()).size());
                 }
+
+                request.setAttribute("albums", albums);
                 request.setAttribute("photoCounts", photoCounts);
                 forward(request, response, "albums.jsp", "albums");
                 break;
             }
 
             case "/favorites":
-                response.sendRedirect(request.getContextPath() + "/gallery");
-                break;
-
             case "/archived":
-                response.sendRedirect(request.getContextPath() + "/gallery");
-                break;
-
             default:
                 response.sendRedirect(request.getContextPath() + "/gallery");
                 break;
         }
     }
 
-    // ─── POST: handle album CRUD ───────────────────────────────────────────────
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -108,7 +108,6 @@ public class MainController extends HttpServlet {
             if (id > 0) {
                 uDAO.logAction(user.getUserId(), "Created album: " + a.getAlbumName());
             }
-
         } else if ("delete".equalsIgnoreCase(action)) {
             try {
                 int albumId = Integer.parseInt(req.getParameter("albumId"));
