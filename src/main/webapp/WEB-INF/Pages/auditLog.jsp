@@ -179,10 +179,10 @@
 </head>
 <body>
 
-    <jsp:include page="adminSidebar.jsp" />
+    <jsp:include page="../components/adminSidebar.jsp" />
 
     <main class="main-content">
-        <jsp:include page="adminHeader.jsp" />
+        <jsp:include page="../components/adminHeader.jsp" />
 
         <div class="log-shell">
             <div class="section-header">

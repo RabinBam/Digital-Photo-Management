@@ -262,17 +262,17 @@
 
     <%-- Sidebar --%>
     <% if (isAdmin) { %>
-        <jsp:include page="adminSidebar.jsp" />
+        <jsp:include page="../components/adminSidebar.jsp" />
     <% } else { %>
-        <jsp:include page="sidebar.jsp" />
+        <jsp:include page="../components/sidebar.jsp" />
     <% } %>
 
     <main class="main-content">
         <%-- Header --%>
         <% if (isAdmin) { %>
-            <jsp:include page="adminHeader.jsp" />
+            <jsp:include page="../components/adminHeader.jsp" />
         <% } else { %>
-            <jsp:include page="Header.jsp" />
+            <jsp:include page="../components/Header.jsp" />
         <% } %>
 
         <div class="profile-shell">
