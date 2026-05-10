@@ -1,6 +1,6 @@
 package com.DigiPic4.model;
 
-<<<<<<< HEAD
+
 public class Album {
     private int albumId;
     private int userId;
@@ -22,35 +22,6 @@ public class Album {
 
     public String getCoverImageUrl()              { return coverImageUrl; }
     public void setCoverImageUrl(String url)      { this.coverImageUrl = url; }
-=======
 
-public class Album {
-    private int id;
-    private int userId;
-    private String title;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
 }

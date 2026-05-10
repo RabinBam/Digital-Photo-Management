@@ -1,14 +1,10 @@
 package com.DigiPic4.dao;
 
 import java.io.IOException;
-<<<<<<< HEAD
 import java.util.List;
 
 import com.DigiPic4.model.Album;
 import com.DigiPic4.model.Photo;
-=======
-
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
 import com.DigiPic4.model.User;
 
 import jakarta.servlet.ServletException;
@@ -24,13 +20,8 @@ public class MainController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-<<<<<<< HEAD
         applyNoCache(response);
 
-=======
-
-        applyNoCache(response);
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
         HttpSession session = request.getSession(false);
         User user = session == null ? null : (User) session.getAttribute("user");
         if (user == null) {
@@ -41,8 +32,6 @@ public class MainController extends HttpServlet {
         String path = request.getServletPath();
 
         switch (path) {
-
-<<<<<<< HEAD
             case "/gallery": {
                 // Load user's photos for gallery
                 PhotoDAO photoDAO = new PhotoDAO();
@@ -69,20 +58,9 @@ public class MainController extends HttpServlet {
             }
 
             case "/favorites":
-=======
-            case "/gallery":
-                forward(request, response, "gallery.jsp", "gallery");
-                break;
-
-            case "/albums":
-                forward(request, response, "albums.jsp", "albums");
-                break;
-
-            case "/favorites":
                 response.sendRedirect(request.getContextPath() + "/gallery");
                 break;
 
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
             case "/archived":
                 response.sendRedirect(request.getContextPath() + "/gallery");
                 break;
@@ -93,7 +71,6 @@ public class MainController extends HttpServlet {
         }
     }
 
-<<<<<<< HEAD
     // ─── POST: handle album CRUD ───────────────────────────────────────────────
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -149,18 +126,6 @@ public class MainController extends HttpServlet {
             throws ServletException, IOException {
         req.setAttribute("page", activePage);
         req.getRequestDispatcher("/" + page).forward(req, res);
-=======
-    private void forward(HttpServletRequest request,
-                         HttpServletResponse response,
-                         String page,
-                         String activePage)
-            throws ServletException, IOException {
-
-        request.setAttribute("page", activePage);
-
-        request.getRequestDispatcher("/" + page)
-               .forward(request, response);
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
     }
 
     private void applyNoCache(HttpServletResponse res) {

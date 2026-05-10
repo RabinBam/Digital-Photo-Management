@@ -9,11 +9,13 @@
     if (currentPage == null) {
         String uri = request.getRequestURI();
         if (uri != null) {
-            if (uri.endsWith("/gallery"))                                currentPage = "gallery";
-            else if (uri.endsWith("/albums"))                            currentPage = "albums";
-            else if (uri.endsWith("/uploadImport"))                      currentPage = "uploadImport";
-            else if (uri.endsWith("/profile"))                           currentPage = "profile";
-            else                                                         currentPage = "";
+            if (uri.endsWith("/gallery"))           currentPage = "gallery";
+            else if (uri.endsWith("/albums"))        currentPage = "albums";
+            else if (uri.endsWith("/uploadImport"))  currentPage = "uploadImport";
+            else if (uri.endsWith("/profile"))       currentPage = "profile";
+            else if (uri.endsWith("/explore"))       currentPage = "explore";
+            else if (uri.endsWith("/photomap"))      currentPage = "map";
+            else                                     currentPage = "";
         } else { currentPage = ""; }
     }
 
@@ -53,6 +55,18 @@
             </a>
         </li>
         <li>
+            <a href="${pageContext.request.contextPath}/explore"
+               class="<%= "explore".equals(currentPage) ? "active" : "" %>">
+                <i class="bi bi-compass"></i> Explore the Ocean
+            </a>
+        </li>
+        <li>
+            <a href="${pageContext.request.contextPath}/photomap"
+               class="<%= "map".equals(currentPage) ? "active" : "" %>">
+                <i class="bi bi-geo-alt"></i> Photo Map
+            </a>
+        </li>
+        <li>
             <a href="${pageContext.request.contextPath}/profile"
                class="<%= "profile".equals(currentPage) ? "active" : "" %>">
                 <i class="bi bi-person-circle"></i> My Profile
@@ -86,32 +100,19 @@
     }
 
     .sidebar-user-card {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        text-decoration: none;
-        transition: background 0.2s;
-        cursor: pointer;
+        display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+        border-radius: 12px; text-decoration: none; transition: background 0.2s; cursor: pointer;
     }
 
     .sidebar-user-card:hover { background: var(--bg-surface-light); }
 
     .user-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #2563eb, #1e40af);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        font-weight: 700;
-        flex-shrink: 0;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb, #1e40af); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; font-weight: 700; flex-shrink: 0;
     }
 
-    .user-name  { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-    .user-role  { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
+    .user-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .user-role { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
 </style>
