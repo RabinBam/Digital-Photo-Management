@@ -17,7 +17,6 @@
     String successMessage = request.getParameter("success");
     String errorMessage   = request.getParameter("error");
 
-    // Albums for the target selector (passed by UploadImportServlet)
     List<Album> uploadAlbums = (List<Album>) request.getAttribute("albums");
 %>
 <!DOCTYPE html>
@@ -40,7 +39,9 @@
 
         /* ── Page shell ─────────────────────────────── */
         .page-shell {
-            max-width: 1280px; margin: 0 auto; padding: 0 28px 48px;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 28px 48px;
         }
 
         .section-header { margin-bottom: 28px; }
@@ -61,9 +62,7 @@
         .stat-card {
             background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 14px;
             padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            transition: box-shadow 0.2s, transform 0.2s;
         }
-        .stat-card:hover { box-shadow: 0 6px 18px rgba(37,99,235,0.1); transform: translateY(-2px); }
         .stat-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.4px; font-weight: 700; margin-bottom: 8px; }
         .stat-value { font-size: 26px; font-weight: 800; color: #1e293b; }
         .stat-meta  { font-size: 12px; color: #2563eb; font-weight: 600; margin-top: 2px; }
@@ -98,22 +97,22 @@
         .upload-zone {
             border: 2px dashed #cbd5e1; border-radius: 14px; padding: 42px 24px;
             text-align: center; cursor: pointer; background: #f8fafc;
-            transition: all 0.25s; position: relative;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            user-select: none;
         }
         .upload-zone:hover, .upload-zone.drag-over {
             border-color: #2563eb; background: #eff6ff;
             box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
         }
-        .upload-zone i { font-size: 48px; color: #2563eb; margin-bottom: 14px; display: block; }
-        .upload-zone h3 { font-family: var(--font-serif); font-size: 22px; color: #1e293b; margin: 0 0 6px; }
-        .upload-zone p  { color: #64748b; font-size: 13px; line-height: 1.6; margin: 0; }
+        .upload-zone i { font-size: 48px; color: #2563eb; margin-bottom: 14px; display: block; pointer-events: none; }
+        .upload-zone h3 { font-family: var(--font-serif); font-size: 22px; color: #1e293b; margin: 0 0 6px; pointer-events: none; }
+        .upload-zone p  { color: #64748b; font-size: 13px; line-height: 1.6; margin: 0; pointer-events: none; }
         .upload-zone .hint {
             margin-top: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
-            text-transform: uppercase; color: #2563eb;
+            text-transform: uppercase; color: #2563eb; pointer-events: none;
         }
-        .upload-zone input[type="file"] {
-            position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-        }
+        /* Hidden file input OUTSIDE the zone - triggered by JS */
+        #fileInput { display: none; }
 
         /* ── Album selector ─────────────────────────── */
         .album-selector-wrap { margin-top: 18px; }
@@ -130,12 +129,12 @@
         .album-select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
         /* ── Selected files list ────────────────────── */
-        .selected-files {
+        #selectedFilesBox {
             display: none; background: #f8fafc; border: 1px solid var(--border-color);
             border-radius: 12px; padding: 16px; margin-top: 16px;
         }
-        .selected-files h4 { font-size: 13px; font-weight: 700; color: #1e293b; margin: 0 0 12px; }
-        .file-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+        #selectedFilesBox h4 { font-size: 13px; font-weight: 700; color: #1e293b; margin: 0 0 12px; }
+        .file-list { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; }
         .file-item {
             display: flex; align-items: center; gap: 12px; padding: 10px 12px;
             background: var(--bg-surface); border: 1px solid var(--border-color);
@@ -151,13 +150,13 @@
         .file-size { font-size: 11px; color: #94a3b8; margin-top: 2px; }
         .remove-btn {
             background: none; border: none; cursor: pointer; color: #94a3b8;
-            font-size: 16px; padding: 4px; border-radius: 6px; transition: color 0.2s;
+            font-size: 16px; padding: 4px 6px; border-radius: 6px; transition: color 0.2s, background 0.2s;
             flex-shrink: 0;
         }
         .remove-btn:hover { color: #ef4444; background: #fee2e2; }
 
         /* ── Progress bar ───────────────────────────── */
-        .upload-progress { display: none; margin-top: 16px; }
+        #uploadProgress { display: none; margin-top: 16px; }
         .progress-header { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 6px; font-weight: 600; }
         .progress-track { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
         .progress-fill  { height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); border-radius: 3px; width: 0%; transition: width 0.3s ease; }
@@ -170,12 +169,12 @@
             font-family: var(--font-sans); font-size: 14px; display: flex; align-items: center; gap: 8px;
             transition: all 0.2s;
         }
-        .btn-upload:hover { box-shadow: 0 6px 18px rgba(37,99,235,0.25); transform: translateY(-1px); }
-        .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-upload:hover:not(:disabled) { box-shadow: 0 6px 18px rgba(37,99,235,0.25); transform: translateY(-1px); }
+        .btn-upload:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
         .btn-clear {
             background: var(--bg-surface-light); color: var(--text-primary);
             border: 1px solid var(--border-color); padding: 11px 18px; border-radius: 10px;
-            font-weight: 600; cursor: pointer; transition: all 0.2s;
+            font-weight: 600; cursor: pointer; font-family: var(--font-sans); transition: all 0.2s;
         }
         .btn-clear:hover { border-color: #ef4444; color: #ef4444; background: #fee2e2; }
 
@@ -211,11 +210,9 @@
         }
         .transfer-ico.done { background: #dcfce7; color: #16a34a; }
         .transfer-ico.pend { background: #fef9c3; color: #ca8a04; }
-        .transfer-ico.fail { background: #fee2e2; color: #dc2626; }
-        .transfer-info { flex: 1; min-width: 0; }
         .transfer-name { font-size: 13px; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .transfer-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-        .transfer-pct  { font-size: 12px; font-weight: 700; color: #2563eb; flex-shrink: 0; }
+        .transfer-pct  { font-size: 12px; font-weight: 700; color: #2563eb; flex-shrink: 0; margin-left: auto; }
 
         /* ── Responsive ─────────────────────────────── */
         @media (max-width: 1100px) { .upload-layout { grid-template-columns: 1fr; } }
@@ -224,7 +221,7 @@
 </head>
 <body>
 
-    <%-- BUG FIX: removed escaped-quote JSP include that caused compile error --%>
+    <%-- Sidebar --%>
     <% if (uploadIsAdmin) { %>
         <jsp:include page="adminSidebar.jsp" />
     <% } else { %>
@@ -232,6 +229,7 @@
     <% } %>
 
     <main class="main-content">
+        <%-- Header --%>
         <% if (uploadIsAdmin) { %>
             <jsp:include page="adminHeader.jsp" />
         <% } else { %>
@@ -270,7 +268,7 @@
                 <%-- ── Left: Upload form ─────────────────────────── --%>
                 <section class="panel">
                     <h2>Upload From Device</h2>
-                    <p class="panel-subtitle">Drag files onto the zone below or click to browse. All selected files are listed before you submit.</p>
+                    <p class="panel-subtitle">Click the zone to browse files, or drag and drop them directly. All selected files are listed before you submit.</p>
 
                     <%-- Flash feedback --%>
                     <% if (successMessage != null && !successMessage.isBlank()) { %>
@@ -286,19 +284,19 @@
                         </div>
                     <% } %>
 
+                    <%-- Hidden file input — outside the drop zone so it doesn't interfere --%>
+                    <input type="file" id="fileInput" name="file" multiple accept="image/*,video/*,.pdf">
+
                     <form id="uploadForm"
                           action="<%= request.getContextPath() %>/uploadImport"
                           method="post"
                           enctype="multipart/form-data">
 
-                        <%-- Drop zone with embedded file input --%>
                         <div class="upload-zone" id="uploadZone">
-                            <input type="file" id="fileInput" name="file" multiple
-                                   accept="image/*,video/*,.pdf">
                             <i class="bi bi-cloud-arrow-up"></i>
                             <h3>Drag &amp; Drop Your Media</h3>
-                            <p>Drop files anywhere in this box, or click to open the file picker.</p>
-                            <div class="hint">JPG · PNG · GIF · MP4 · MOV · PDF · Max 500 MB each</div>
+                            <p>Click anywhere in this box to open the file picker,<br>or drop files directly here.</p>
+                            <div class="hint">JPG · PNG · GIF · MP4 · MOV · PDF &nbsp;·&nbsp; Max 500 MB each</div>
                         </div>
 
                         <%-- Album selector --%>
@@ -315,21 +313,25 @@
                         </div>
 
                         <%-- Selected files list --%>
-                        <div class="selected-files" id="selectedFiles">
+                        <div id="selectedFilesBox">
                             <h4 id="selectedCount">Selected Files (0)</h4>
                             <div class="file-list" id="fileList"></div>
                         </div>
 
-                        <%-- Upload progress (shown during form submit) --%>
-                        <div class="upload-progress" id="uploadProgress">
+                        <%-- Upload progress --%>
+                        <div id="uploadProgress">
                             <div class="progress-header">
-                                <span id="progressLabel">Uploading…</span>
+                                <span>Uploading to server…</span>
                                 <span id="progressPct">0%</span>
                             </div>
                             <div class="progress-track">
                                 <div class="progress-fill" id="progressFill"></div>
                             </div>
                         </div>
+
+                        <%-- The actual file input that submits with the form --%>
+                        <%-- We clone buffered files into a second hidden input on submit --%>
+                        <input type="file" id="formFileInput" name="file" multiple accept="image/*,video/*,.pdf" style="display:none">
 
                         <div class="form-actions">
                             <button type="submit" class="btn-upload" id="uploadBtn" disabled>
@@ -345,11 +347,9 @@
                 <%-- ── Right column ──────────────────────────────── --%>
                 <div style="display:flex; flex-direction:column; gap:20px;">
 
-                    <%-- Import sources --%>
                     <section class="panel">
                         <h2>Import Sources</h2>
-                        <p class="panel-subtitle">Connect cloud services or paste a URL to pull in media without leaving the dashboard.</p>
-
+                        <p class="panel-subtitle">Connect cloud services or paste a URL to pull in media.</p>
                         <div class="import-grid">
                             <div class="import-card" onclick="importAlert('Cloud Drive')">
                                 <i class="bi bi-cloud-fill"></i>
@@ -372,28 +372,25 @@
                                 <p>Paste any direct file link</p>
                             </div>
                         </div>
-
                         <div class="side-note">
-                            <strong>Tip:</strong> Organise uploads into albums before importing large batches — the album selector above assigns files automatically.
+                            <strong>Tip:</strong> Organise uploads into albums before importing large batches — the album selector on the left assigns files automatically.
                         </div>
                     </section>
 
-                    <%-- Recent transfers --%>
                     <section class="panel">
                         <h2>Recent Transfers</h2>
-                        <p class="panel-subtitle">Latest upload and import activity.</p>
-
+                        <p class="panel-subtitle">Latest upload activity.</p>
                         <div class="transfer-item">
                             <div class="transfer-ico done"><i class="bi bi-check2"></i></div>
-                            <div class="transfer-info">
+                            <div style="flex:1;min-width:0;">
                                 <div class="transfer-name">Vacation_Sea_View_01.jpg</div>
-                                <div class="transfer-meta">Uploaded from device · 24 min ago</div>
+                                <div class="transfer-meta">Device upload · 24 min ago</div>
                             </div>
                             <span class="transfer-pct">100%</span>
                         </div>
                         <div class="transfer-item">
                             <div class="transfer-ico done"><i class="bi bi-check2"></i></div>
-                            <div class="transfer-info">
+                            <div style="flex:1;min-width:0;">
                                 <div class="transfer-name">Family_Backup_2024.zip</div>
                                 <div class="transfer-meta">Cloud Drive sync · 3 hours ago</div>
                             </div>
@@ -401,9 +398,9 @@
                         </div>
                         <div class="transfer-item">
                             <div class="transfer-ico pend"><i class="bi bi-hourglass-split"></i></div>
-                            <div class="transfer-info">
+                            <div style="flex:1;min-width:0;">
                                 <div class="transfer-name">ShortClip.mp4</div>
-                                <div class="transfer-meta">URL fetch in progress · Today</div>
+                                <div class="transfer-meta">URL fetch in progress</div>
                             </div>
                             <span class="transfer-pct">41%</span>
                         </div>
@@ -416,129 +413,161 @@
 
     <script>
     (function () {
-        const zone      = document.getElementById('uploadZone');
-        const input     = document.getElementById('fileInput');
-        const selBox    = document.getElementById('selectedFiles');
-        const fileList  = document.getElementById('fileList');
-        const countLbl  = document.getElementById('selectedCount');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const clearBtn  = document.getElementById('clearBtn');
-        const form      = document.getElementById('uploadForm');
-        let buffered    = [];
+        var zone     = document.getElementById('uploadZone');
+        var picker   = document.getElementById('fileInput');       // hidden picker, NOT in form
+        var formInput = document.getElementById('formFileInput');  // submits with form
+        var selBox   = document.getElementById('selectedFilesBox');
+        var fileList = document.getElementById('fileList');
+        var countLbl = document.getElementById('selectedCount');
+        var uploadBtn = document.getElementById('uploadBtn');
+        var clearBtn  = document.getElementById('clearBtn');
+        var form      = document.getElementById('uploadForm');
+        var buffered  = [];
 
-        const ICONS = {
-            image: 'bi-image',
-            video: 'bi-camera-video',
-            application: 'bi-file-earmark-pdf',
-            default: 'bi-file-earmark'
-        };
+        var ALLOWED = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.mov', '.pdf'];
+        var ICONS = { image: 'bi-image', video: 'bi-camera-video', application: 'bi-file-earmark-pdf' };
 
-        function iconForType(type) {
-            const base = (type || '').split('/')[0];
-            return ICONS[base] || ICONS.default;
+        function iconFor(type) {
+            var base = (type || '').split('/')[0];
+            return ICONS[base] || 'bi-file-earmark';
         }
 
         function fmt(bytes) {
             if (!bytes) return '0 B';
-            const s = ['B','KB','MB','GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            var s = ['B','KB','MB','GB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(1024));
             return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + s[i];
+        }
+
+        function isAllowed(name) {
+            var ext = '.' + name.split('.').pop().toLowerCase();
+            return ALLOWED.indexOf(ext) !== -1;
         }
 
         function render() {
             if (!buffered.length) {
                 selBox.style.display = 'none';
-                uploadBtn.disabled   = true;
+                uploadBtn.disabled = true;
                 return;
             }
             countLbl.textContent = 'Selected Files (' + buffered.length + ')';
-            fileList.innerHTML   = buffered.map((f, i) => `
-                <div class="file-item">
-                    <div class="file-item-icon"><i class="bi ${iconForType(f.type)}"></i></div>
-                    <div class="file-item-info">
-                        <div class="file-name">${f.name}</div>
-                        <div class="file-size">${fmt(f.size)}</div>
-                    </div>
-                    <button class="remove-btn" type="button" data-idx="${i}" title="Remove">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>`).join('');
+            fileList.innerHTML = buffered.map(function(f, i) {
+                return '<div class="file-item">' +
+                    '<div class="file-item-icon"><i class="bi ' + iconFor(f.type) + '"></i></div>' +
+                    '<div class="file-item-info">' +
+                        '<div class="file-name">' + f.name + '</div>' +
+                        '<div class="file-size">' + fmt(f.size) + '</div>' +
+                    '</div>' +
+                    '<button class="remove-btn" type="button" data-idx="' + i + '" title="Remove">' +
+                        '<i class="bi bi-x-lg"></i>' +
+                    '</button>' +
+                '</div>';
+            }).join('');
             selBox.style.display = 'block';
-            uploadBtn.disabled   = false;
+            uploadBtn.disabled = false;
 
-            // Wire remove buttons
-            fileList.querySelectorAll('.remove-btn').forEach(btn => {
-                btn.onclick = () => {
-                    buffered.splice(+btn.dataset.idx, 1);
-                    syncInput();
+            fileList.querySelectorAll('.remove-btn').forEach(function(btn) {
+                btn.onclick = function() {
+                    buffered.splice(parseInt(btn.dataset.idx), 1);
                     render();
                 };
             });
         }
 
-        function syncInput() {
-            const dt = new DataTransfer();
-            buffered.forEach(f => dt.items.add(f));
-            input.files = dt.files;
-        }
-
         function addFiles(newFiles) {
-            const allowed = ['.jpg','.jpeg','.png','.gif','.mp4','.mov','.pdf'];
-            Array.from(newFiles).forEach(f => {
-                const ext = '.' + f.name.split('.').pop().toLowerCase();
-                if (allowed.includes(ext)) buffered.push(f);
-                else alert(f.name + ' is not a supported file type.');
+            var skipped = [];
+            Array.from(newFiles).forEach(function(f) {
+                if (isAllowed(f.name)) {
+                    buffered.push(f);
+                } else {
+                    skipped.push(f.name);
+                }
             });
-            syncInput();
+            if (skipped.length) {
+                alert('Skipped unsupported file(s):\n' + skipped.join('\n'));
+            }
             render();
         }
 
-        // File picker
-        input.onchange = e => addFiles(e.target.files);
+        // Click on drop zone → open file picker
+        zone.addEventListener('click', function() {
+            picker.value = '';
+            picker.click();
+        });
 
-        // Drag & drop on the zone (the native input already handles clicks)
-        ['dragenter','dragover'].forEach(ev =>
-            zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('drag-over'); }));
-        ['dragleave','drop'].forEach(ev =>
-            zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('drag-over'); }));
-        zone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+        // File picker selection
+        picker.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files.length) {
+                addFiles(e.target.files);
+            }
+        });
 
-        // Clear
-        clearBtn.onclick = () => {
+        // Drag and drop on zone
+        zone.addEventListener('dragenter', function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragover',  function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', function(e) { e.preventDefault(); zone.classList.remove('drag-over'); });
+        zone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            if (e.dataTransfer && e.dataTransfer.files.length) {
+                addFiles(e.dataTransfer.files);
+            }
+        });
+
+        // Clear all
+        clearBtn.addEventListener('click', function() {
             buffered = [];
-            input.value = '';
+            picker.value = '';
             render();
-        };
+        });
 
-        // Animate progress on submit
-        form.onsubmit = () => {
-            if (!buffered.length) return false;
-            const prog = document.getElementById('uploadProgress');
-            const fill = document.getElementById('progressFill');
-            const pct  = document.getElementById('progressPct');
+        // On submit: copy buffered files into the form input via DataTransfer, then show progress
+        form.addEventListener('submit', function(e) {
+            if (!buffered.length) {
+                e.preventDefault();
+                return;
+            }
+
+            // Build a new DataTransfer with our buffered files and assign to the form input
+            var dt = new DataTransfer();
+            buffered.forEach(function(f) { dt.items.add(f); });
+            formInput.files = dt.files;
+
+            // Show progress animation
+            var prog = document.getElementById('uploadProgress');
+            var fill = document.getElementById('progressFill');
+            var pct  = document.getElementById('progressPct');
             prog.style.display = 'block';
             uploadBtn.disabled = true;
             uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading…';
-            let p = 0;
-            const iv = setInterval(() => {
-                p = Math.min(p + Math.random() * 15, 90);
+
+            var p = 0;
+            var iv = setInterval(function() {
+                p = Math.min(p + Math.random() * 12, 88);
                 fill.style.width = p + '%';
                 pct.textContent  = Math.floor(p) + '%';
-            }, 250);
-            // Let the browser actually submit
-            setTimeout(() => clearInterval(iv), 10000);
-            return true;
-        };
+            }, 300);
+            setTimeout(function() { clearInterval(iv); }, 15000);
+            // Allow form to submit naturally
+        });
+
+        // Keyboard accessibility on drop zone
+        zone.setAttribute('tabindex', '0');
+        zone.setAttribute('role', 'button');
+        zone.setAttribute('aria-label', 'Click or drop files to upload');
+        zone.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); picker.click(); }
+        });
     })();
 
     function importAlert(source) {
-        alert(source + ' integration coming soon!\n\nYou can currently upload files directly from your device using the form on the left.');
+        alert(source + ' integration coming soon!\n\nUse the Upload From Device panel to upload files from your computer.');
     }
 
     function importFromUrl() {
-        const url = prompt('Paste the direct URL of the media file you want to import:');
+        var url = prompt('Paste the direct URL of the media file to import:');
         if (url && url.trim()) {
-            alert('URL import queued:\n' + url.trim() + '\n\nThis feature will be wired to the backend upload pipeline in a future release.');
+            alert('URL import queued:\n' + url.trim() + '\n\n(This will be wired to the backend in a future release.)');
         }
     }
     </script>
