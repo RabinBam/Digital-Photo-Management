@@ -1,15 +1,9 @@
-<<<<<<< HEAD
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.DigiPic4.model.User" %>
-=======
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
 <%
-<<<<<<< HEAD
     User adminSidebarUser = (User) session.getAttribute("user");
     String currentPage = (String) request.getAttribute("page");
     if (currentPage == null) {
@@ -45,53 +39,16 @@
         <li>
             <a href="${pageContext.request.contextPath}/gallery"
                class="<%= "gallery".equals(currentPage) ? "active" : "" %>">
-=======
-    String currentPage = (String) request.getAttribute("page");
-    if (currentPage == null || currentPage.trim().isEmpty()) {
-        String uri = request.getRequestURI();
-        if (uri != null) {
-            if (uri.endsWith("/gallery")) {
-                currentPage = "gallery";
-            } else if (uri.endsWith("/albums")) {
-                currentPage = "albums";
-            } else if (uri.endsWith("/captain-cabin")) {
-                currentPage = "captain-cabin";
-            } else if (uri.endsWith("/uploadImport") || uri.endsWith("/uploadImport.jsp")) {
-                currentPage = "uploadImport";
-            } else {
-                currentPage = "";
-            }
-        } else {
-            currentPage = "";
-        }
-    }
-%>
-
-<div class="sidebar">
-    <div class="logo">
-        MyVault
-        <span>Personal Archive</span>
-    </div>
-
-    <ul class="nav-links menu">
-        <li>
-            <a href="${pageContext.request.contextPath}/gallery" class="<%= "gallery".equals(currentPage) ? "active" : "" %>">
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
                 <i class="bi bi-collection"></i> Recent Floats
             </a>
         </li>
         <li>
-<<<<<<< HEAD
             <a href="${pageContext.request.contextPath}/albums"
                class="<%= "albums".equals(currentPage) ? "active" : "" %>">
-=======
-            <a href="${pageContext.request.contextPath}/albums" class="<%= "albums".equals(currentPage) ? "active" : "" %>">
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
                 <i class="bi bi-folder2"></i> Deep Storage
             </a>
         </li>
         <li>
-<<<<<<< HEAD
             <a href="${pageContext.request.contextPath}/uploadImport"
                class="<%= "uploadImport".equals(currentPage) ? "active" : "" %>">
                 <i class="bi bi-cloud-upload"></i> Upload &amp; Import
@@ -116,15 +73,6 @@
             <a href="${pageContext.request.contextPath}/profile"
                class="<%= "profile".equals(currentPage) ? "active" : "" %>">
                 <i class="bi bi-person-circle"></i> My Profile
-=======
-            <a href="${pageContext.request.contextPath}/uploadImport" class="<%= "uploadImport".equals(currentPage) ? "active" : "" %>">
-                <i class="bi bi-cloud-upload"></i> Upload & Import
-            </a>
-        </li>
-        <li>
-            <a href="${pageContext.request.contextPath}/captain-cabin" class="<%= "captain-cabin".equals(currentPage) ? "active" : "" %>">
-                <i class="bi bi-shield-lock"></i> Captain Cabin
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344
             </a>
         </li>
         <li>
@@ -133,7 +81,6 @@
             </a>
         </li>
     </ul>
-<<<<<<< HEAD
 
     <div class="sidebar-footer">
         <a href="${pageContext.request.contextPath}/profile" class="sidebar-user-card">
@@ -195,12 +142,3 @@
     .user-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
     .user-role { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
 </style>
-=======
-</div>
-
-<style>
-    .nav-links a i {
-        margin-right: 8px;
-    }
-</style>
->>>>>>> ef437becfd842209955dd0ce82dfeae595f55344

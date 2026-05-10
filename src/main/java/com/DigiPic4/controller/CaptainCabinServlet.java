@@ -1,6 +1,8 @@
 package com.DigiPic4.controller;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -27,29 +29,46 @@ public class CaptainCabinServlet extends HttpServlet {
             return;
         }
 
-        UserDAO dao = new UserDAO();
-        String editId = req.getParameter("editId");
+        try {
+            UserDAO dao = new UserDAO();
+            String editId = req.getParameter("editId");
 
-        if (editId != null && !editId.isBlank()) {
+            if (editId != null && !editId.isBlank()) {
+                try {
+                    User editingUser = dao.findUserById(Integer.parseInt(editId));
+                    req.setAttribute("editingUser", editingUser);
+                } catch (NumberFormatException e) {
+                    req.setAttribute("error", "Invalid user selected for editing.");
+                }
+            }
+
+            List<User> users = dao.findAllUsers();
+            req.setAttribute("users", users);
+
+            if (req.getParameter("message") != null) {
+                req.setAttribute("message", req.getParameter("message"));
+            }
+            if (req.getParameter("error") != null) {
+                req.setAttribute("error", req.getParameter("error"));
+            }
+
+            req.getRequestDispatcher("/captainCabin.jsp").forward(req, res);
+        } catch (Exception e) {
+            e.printStackTrace();
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String errorDetails = sw.toString();
+            
+            req.setAttribute("error", "Database Error: " + e.getClass().getName() + " - " + e.getMessage());
+            System.err.println("CaptainCabin Error: " + errorDetails);
+            
             try {
-                User editingUser = dao.findUserById(Integer.parseInt(editId));
-                req.setAttribute("editingUser", editingUser);
-            } catch (NumberFormatException e) {
-                req.setAttribute("error", "Invalid user selected for editing.");
+                req.getRequestDispatcher("/captainCabin.jsp").forward(req, res);
+            } catch (Exception ex) {
+                res.sendError(500, "Critical error: " + ex.getMessage());
             }
         }
-
-        List<User> users = dao.findAllUsers();
-        req.setAttribute("users", users);
-
-        if (req.getParameter("message") != null) {
-            req.setAttribute("message", req.getParameter("message"));
-        }
-        if (req.getParameter("error") != null) {
-            req.setAttribute("error", req.getParameter("error"));
-        }
-
-        req.getRequestDispatcher("/captainCabin.jsp").forward(req, res);
     }
 
     @Override
