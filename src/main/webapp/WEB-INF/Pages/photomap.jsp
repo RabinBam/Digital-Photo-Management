@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Leaflet CSS (free, open-source, no key needed) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
     <style>
         :root { --font-serif: 'Cormorant Garamond', serif; --font-sans: 'Sora', sans-serif; }
 
@@ -164,20 +164,60 @@
         </div>
     </main>
 
-    <!-- Leaflet JS (free, no API key required) -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-    // ── Map init ─────────────────────────────────────────────────────
-    const map = L.map('photoMap', { zoomControl: true }).setView([20, 0], 2);
-
-    // Free OpenStreetMap tiles — no API key needed
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-    }).addTo(map);
-
+    let map = null;
     let pins = JSON.parse(localStorage.getItem('digipic_map_pins') || '[]');
     const markers = {};
+
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const existing = Array.from(document.getElementsByTagName('script')).find(s => s.src === src);
+            if (existing) {
+                if (window.L) { resolve(); return; }
+                existing.addEventListener('load', () => resolve(), { once: true });
+                existing.addEventListener('error', () => reject(new Error(src)), { once: true });
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error(src));
+            document.head.appendChild(script);
+        });
+    }
+
+    function showMapError(message) {
+        const mapEl = document.getElementById('photoMap');
+        if (mapEl) {
+            mapEl.innerHTML = `<div class="map-status" style="height:100%;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;">${message}</div>`;
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // ── Map init ─────────────────────────────────────────────────────
+    function initializePhotoMap() {
+        if (!window.L) {
+            showMapError('Photo Map could not load because the Leaflet library is unavailable.');
+            return;
+        }
+
+        map = L.map('photoMap', { zoomControl: true }).setView([20, 0], 2);
+
+        // Free OpenStreetMap tiles — no API key needed
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
 
     // Custom pin icon
     function makeIcon(color) {
@@ -190,118 +230,148 @@
         });
     }
 
-    function saveToStorage() { localStorage.setItem('digipic_map_pins', JSON.stringify(pins)); }
+        function saveToStorage() { localStorage.setItem('digipic_map_pins', JSON.stringify(pins)); }
 
-    // ── Add marker to map ─────────────────────────────────────────────
-    function addMarkerToMap(pin) {
-        const marker = L.marker([pin.lat, pin.lng], { icon: makeIcon('#2563eb') }).addTo(map);
-        const imgTag = pin.imageUrl
-            ? `<img src="${pin.imageUrl}" onerror="this.style.display='none'" style="width:100%;height:120px;object-fit:cover;display:block;">`
-            : `<div style="width:100%;height:90px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:30px;">📸</div>`;
-        const popupHtml = `
-            <div class="map-popup">
-                ${imgTag}
-                <div class="map-popup-body">
-                    <div class="map-popup-title">${pin.title}</div>
-                    <div class="map-popup-loc"><i class="bi bi-geo-alt"></i>${pin.location || 'No location'}</div>
-                    <div style="font-size:11px;color:#94a3b8;margin-top:4px;">${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}</div>
-                </div>
-            </div>`;
-        marker.bindPopup(popupHtml, { maxWidth: 220 });
-        // Hover to show popup
-        marker.on('mouseover', function() { this.openPopup(); });
-        markers[pin.id] = marker;
+        // ── Add marker to map ─────────────────────────────────────────────
+        function addMarkerToMap(pin) {
+            const marker = L.marker([pin.lat, pin.lng], { icon: makeIcon('#2563eb') }).addTo(map);
+            const safeTitle = escapeHtml(pin.title);
+            const safeLocation = escapeHtml(pin.location || 'No location');
+            const safeImageUrl = escapeHtml(pin.imageUrl || '');
+            const imgTag = pin.imageUrl
+                ? `<img src="${safeImageUrl}" onerror="this.style.display='none'" style="width:100%;height:120px;object-fit:cover;display:block;">`
+                : `<div style="width:100%;height:90px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:30px;">📸</div>`;
+            const popupHtml = `
+                <div class="map-popup">
+                    ${imgTag}
+                    <div class="map-popup-body">
+                        <div class="map-popup-title">${safeTitle}</div>
+                        <div class="map-popup-loc"><i class="bi bi-geo-alt"></i>${safeLocation}</div>
+                        <div style="font-size:11px;color:#94a3b8;margin-top:4px;">${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}</div>
+                    </div>
+                </div>`;
+            marker.bindPopup(popupHtml, { maxWidth: 220 });
+            // Hover to show popup
+            marker.on('mouseover', function() { this.openPopup(); });
+            markers[pin.id] = marker;
+        }
+
+        // ── Render pin list ──────────────────────────────────────────────
+        function renderPinList() {
+            const list = document.getElementById('pinList');
+            document.getElementById('pinCount').textContent = pins.length;
+            if (!pins.length) {
+                list.innerHTML = '<div class="map-status">No pins yet. Click the map or fill the form above.</div>';
+                return;
+            }
+            list.innerHTML = pins.map((p, i) => `
+                <div class="pin-item" onclick="flyToPin('${p.id}')">
+                    ${p.imageUrl ? `<img class="pin-thumb" src="${escapeHtml(p.imageUrl)}" onerror="this.style.display='none'">` : `<div class="pin-thumb-ph"><i class="bi bi-geo-alt-fill"></i></div>`}
+                    <div>
+                        <div class="pin-info-name">${escapeHtml(p.title)}</div>
+                        <div class="pin-info-loc"><i class="bi bi-geo-alt"></i> ${escapeHtml(p.location || (p.lat.toFixed(3)+', '+p.lng.toFixed(3)))}</div>
+                    </div>
+                    <button class="pin-del" onclick="event.stopPropagation(); removePin(${i})" title="Remove pin"><i class="bi bi-trash3"></i></button>
+                </div>`).join('');
+        }
+
+        function flyToPin(id) {
+            const m = markers[id];
+            if (!m || !map) return;
+            map.flyTo(m.getLatLng(), 12, { animate: true, duration: 1 });
+            setTimeout(() => m.openPopup(), 900);
+        }
+
+        function removePin(idx) {
+            const pin = pins[idx];
+            if (markers[pin.id]) { markers[pin.id].remove(); delete markers[pin.id]; }
+            pins.splice(idx, 1);
+            saveToStorage();
+            renderPinList();
+        }
+
+        // ── Add pin ──────────────────────────────────────────────────────
+        function addPin() {
+            if (!map) { alert('The map is still loading. Please try again in a moment.'); return; }
+            const title    = document.getElementById('pinTitle').value.trim();
+            const imageUrl = document.getElementById('pinImageUrl').value.trim();
+            const lat      = parseFloat(document.getElementById('pinLat').value);
+            const lng      = parseFloat(document.getElementById('pinLng').value);
+            const location = document.getElementById('pinLocation').value.trim();
+
+            if (!title) { alert('Please enter a photo title.'); return; }
+            if (isNaN(lat) || isNaN(lng)) { alert('Please enter valid coordinates (or click the map to auto-fill).'); return; }
+
+            const pin = { id: Date.now().toString(), title, imageUrl, lat, lng, location };
+            pins.push(pin);
+            saveToStorage();
+            addMarkerToMap(pin);
+            renderPinList();
+            map.flyTo([lat, lng], 10, { animate: true, duration: 1.2 });
+
+            // Clear form
+            ['pinTitle','pinImageUrl','pinLat','pinLng','pinLocation'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+        }
+
+        // ── Click map to set coordinates ─────────────────────────────────
+        map.on('click', function(e) {
+            document.getElementById('pinLat').value = e.latlng.lat.toFixed(6);
+            document.getElementById('pinLng').value = e.latlng.lng.toFixed(6);
+            // Try reverse geocode via free Nominatim API
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}`, {
+                headers: { 'Accept': 'application/json' },
+                referrerPolicy: 'no-referrer'
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d && d.display_name) {
+                        const short = d.address
+                            ? [d.address.city || d.address.town || d.address.village, d.address.country].filter(Boolean).join(', ')
+                            : d.display_name.split(',').slice(0,2).join(',');
+                        document.getElementById('pinLocation').value = short;
+                    }
+                }).catch(() => {});
+        });
+
+        // ── Load stored pins ─────────────────────────────────────────────
+        pins.forEach(addMarkerToMap);
+        renderPinList();
+
+        // ── Pre-seeded demo pins (shown on first load) ────────────────────
+        if (!pins.length) {
+            const demos = [
+                { id:'d1', title:'Phewa Lake, Pokhara', imageUrl:'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=400&q=80', lat:28.2096, lng:83.9856, location:'Pokhara, Nepal' },
+                { id:'d2', title:'Eiffel Tower at Dusk', imageUrl:'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&q=80', lat:48.8584, lng:2.2945, location:'Paris, France' },
+                { id:'d3', title:'Great Barrier Reef', imageUrl:'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=400&q=80', lat:-18.2871, lng:147.6992, location:'Queensland, Australia' },
+            ];
+            demos.forEach(p => { pins.push(p); addMarkerToMap(p); });
+            saveToStorage();
+            renderPinList();
+        }
+
+        window.addPin = addPin;
+        window.flyToPin = flyToPin;
+        window.removePin = removePin;
     }
 
-    // ── Render pin list ──────────────────────────────────────────────
-    function renderPinList() {
-        const list = document.getElementById('pinList');
-        document.getElementById('pinCount').textContent = pins.length;
-        if (!pins.length) {
-            list.innerHTML = '<div class="map-status">No pins yet. Click the map or fill the form above.</div>';
+    function bootPhotoMap() {
+        if (window.L) {
+            initializePhotoMap();
             return;
         }
-        list.innerHTML = pins.map((p, i) => `
-            <div class="pin-item" onclick="flyToPin('${p.id}')">
-                ${p.imageUrl ? `<img class="pin-thumb" src="${p.imageUrl}" onerror="this.style.display='none'">` : `<div class="pin-thumb-ph"><i class="bi bi-geo-alt-fill"></i></div>`}
-                <div>
-                    <div class="pin-info-name">${p.title}</div>
-                    <div class="pin-info-loc"><i class="bi bi-geo-alt"></i> ${p.location || p.lat.toFixed(3)+', '+p.lng.toFixed(3)}</div>
-                </div>
-                <button class="pin-del" onclick="event.stopPropagation(); removePin(${i})" title="Remove pin"><i class="bi bi-trash3"></i></button>
-            </div>`).join('');
+
+        loadScript('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js')
+            .catch(() => loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'))
+            .then(() => initializePhotoMap())
+            .catch(() => showMapError('Photo Map could not load because the free Leaflet assets are unavailable right now.'));
     }
 
-    function flyToPin(id) {
-        const m = markers[id];
-        if (!m) return;
-        map.flyTo(m.getLatLng(), 12, { animate: true, duration: 1 });
-        setTimeout(() => m.openPopup(), 900);
-    }
-
-    function removePin(idx) {
-        const pin = pins[idx];
-        if (markers[pin.id]) { markers[pin.id].remove(); delete markers[pin.id]; }
-        pins.splice(idx, 1);
-        saveToStorage();
-        renderPinList();
-    }
-
-    // ── Add pin ──────────────────────────────────────────────────────
-    function addPin() {
-        const title    = document.getElementById('pinTitle').value.trim();
-        const imageUrl = document.getElementById('pinImageUrl').value.trim();
-        const lat      = parseFloat(document.getElementById('pinLat').value);
-        const lng      = parseFloat(document.getElementById('pinLng').value);
-        const location = document.getElementById('pinLocation').value.trim();
-
-        if (!title) { alert('Please enter a photo title.'); return; }
-        if (isNaN(lat) || isNaN(lng)) { alert('Please enter valid coordinates (or click the map to auto-fill).'); return; }
-
-        const pin = { id: Date.now().toString(), title, imageUrl, lat, lng, location };
-        pins.push(pin);
-        saveToStorage();
-        addMarkerToMap(pin);
-        renderPinList();
-        map.flyTo([lat, lng], 10, { animate: true, duration: 1.2 });
-
-        // Clear form
-        ['pinTitle','pinImageUrl','pinLat','pinLng','pinLocation'].forEach(id => {
-            document.getElementById(id).value = '';
-        });
-    }
-
-    // ── Click map to set coordinates ─────────────────────────────────
-    map.on('click', function(e) {
-        document.getElementById('pinLat').value = e.latlng.lat.toFixed(6);
-        document.getElementById('pinLng').value = e.latlng.lng.toFixed(6);
-        // Try reverse geocode via free Nominatim API
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}`)
-            .then(r => r.json())
-            .then(d => {
-                if (d && d.display_name) {
-                    const short = d.address
-                        ? [d.address.city || d.address.town || d.address.village, d.address.country].filter(Boolean).join(', ')
-                        : d.display_name.split(',').slice(0,2).join(',');
-                    document.getElementById('pinLocation').value = short;
-                }
-            }).catch(() => {});
-    });
-
-    // ── Load stored pins ─────────────────────────────────────────────
-    pins.forEach(addMarkerToMap);
-    renderPinList();
-
-    // ── Pre-seeded demo pins (shown on first load) ────────────────────
-    if (!pins.length) {
-        const demos = [
-            { id:'d1', title:'Phewa Lake, Pokhara', imageUrl:'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=400&q=80', lat:28.2096, lng:83.9856, location:'Pokhara, Nepal' },
-            { id:'d2', title:'Eiffel Tower at Dusk', imageUrl:'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&q=80', lat:48.8584, lng:2.2945, location:'Paris, France' },
-            { id:'d3', title:'Great Barrier Reef', imageUrl:'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=400&q=80', lat:-18.2871, lng:147.6992, location:'Queensland, Australia' },
-        ];
-        demos.forEach(p => { pins.push(p); addMarkerToMap(p); });
-        saveToStorage();
-        renderPinList();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootPhotoMap);
+    } else {
+        bootPhotoMap();
     }
     </script>
 </body>

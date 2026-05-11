@@ -8,7 +8,6 @@
     response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     response.setHeader("Pragma", "no-cache");
     response.setDateHeader("Expires", 0);
-    String ctxPath = request.getContextPath();
 %>
 <!DOCTYPE html>
 <html>
@@ -51,6 +50,7 @@
         }
         .explore-tag:hover, .explore-tag.active { background:#2563eb; color:#fff; border-color:#2563eb; }
 
+        /* Masonry grid */
         .explore-grid { columns:4; column-gap:16px; }
         @media(max-width:1100px){ .explore-grid { columns:3; } }
         @media(max-width:760px) { .explore-grid { columns:2; } }
@@ -59,34 +59,42 @@
         .explore-card {
             break-inside:avoid; margin-bottom:16px; border-radius:14px; overflow:hidden;
             position:relative; cursor:pointer; border:2px solid transparent;
-            box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:all 0.25s;
+            box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:all 0.25s; display:block;
         }
         .explore-card:hover { transform:translateY(-4px); box-shadow:0 14px 32px rgba(37,99,235,0.15); border-color:#93c5fd; }
         .explore-card img { width:100%; display:block; }
         .explore-card-overlay {
-            position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%);
-            opacity:0; transition:opacity 0.2s; display:flex; flex-direction:column;
-            justify-content:flex-end; padding:14px; gap:8px;
+            position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%);
+            opacity:0; transition:opacity 0.2s; display:flex; flex-direction:column; justify-content:flex-end; padding:14px;
         }
         .explore-card:hover .explore-card-overlay { opacity:1; }
-        .explore-card-title { color:#fff; font-size:12px; font-weight:600; line-height:1.4; }
+        .explore-card-title { color:#fff; font-size:12px; font-weight:600; line-height:1.4; margin-bottom:4px; }
         .explore-card-author { color:rgba(255,255,255,0.7); font-size:11px; }
 
-        /* Save to Gallery button */
-        .save-to-gallery-btn {
-            display:inline-flex; align-items:center; gap:5px;
-            padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700;
-            background:rgba(37,99,235,0.9); color:#fff; border:none; cursor:pointer;
-            transition:all 0.2s; align-self:flex-start;
-        }
-        .save-to-gallery-btn:hover { background:#2563eb; transform:scale(1.05); }
-        .save-to-gallery-btn.saved { background:rgba(34,197,94,0.9); }
-        .save-to-gallery-btn.saving { opacity:0.6; pointer-events:none; }
+        /* Skeleton loader */
+        .skeleton-grid { columns:4; column-gap:16px; }
+        @media(max-width:1100px){ .skeleton-grid { columns:3; } }
+        @media(max-width:760px) { .skeleton-grid { columns:2; } }
+        @media(max-width:480px) { .skeleton-grid { columns:1; } }
 
-        .loading-spinner { display:none; text-align:center; padding:60px; }
-        .spinner { width:40px; height:40px; border:3px solid #e2e8f0; border-top-color:#2563eb;
-            border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 14px; }
-        @keyframes spin { to { transform:rotate(360deg); } }
+        .skeleton-card {
+            break-inside:avoid; margin-bottom:16px; border-radius:14px; overflow:hidden;
+            background: linear-gradient(90deg, #f0f4f8 25%, #e2e8f0 50%, #f0f4f8 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        .skeleton-card.h1 { height: 220px; }
+        .skeleton-card.h2 { height: 160px; }
+        .skeleton-card.h3 { height: 280px; }
+        .skeleton-card.h4 { height: 200px; }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .explore-empty { text-align:center; padding:80px 20px; color:#94a3b8; }
+        .explore-empty i { font-size:48px; margin-bottom:14px; display:block; }
 
         .explore-stats { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
         .explore-stat {
@@ -95,25 +103,24 @@
         }
         .explore-stat strong { color:#1e293b; }
 
-        .explore-empty { text-align:center; padding:80px 20px; color:#94a3b8; }
-        .explore-empty i { font-size:48px; margin-bottom:14px; display:block; }
-
+        /* Lightbox */
         .lightbox-overlay {
-            display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88);
-            z-index:2000; justify-content:center; align-items:center; padding:20px;
+            display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000;
+            justify-content:center; align-items:center; padding:20px;
         }
         .lightbox-overlay.open { display:flex; }
         .lightbox-inner { position:relative; max-width:900px; width:100%; }
         .lightbox-inner img { width:100%; border-radius:14px; box-shadow:0 24px 60px rgba(0,0,0,0.5); }
         .lightbox-close {
             position:absolute; top:-16px; right:-16px; width:36px; height:36px; border-radius:50%;
-            background:#fff; border:none; cursor:pointer; font-size:18px;
-            display:flex; align-items:center; justify-content:center; transition:all 0.2s;
+            background:#fff; border:none; cursor:pointer; font-size:18px; display:flex;
+            align-items:center; justify-content:center; transition:all 0.2s;
         }
         .lightbox-close:hover { background:#ef4444; color:#fff; }
-        .lightbox-caption { color:#fff; text-align:center; margin-top:14px; font-size:14px; }
-        .lightbox-author  { color:rgba(255,255,255,0.6); font-size:12px; margin-top:4px; text-align:center; }
+        .lightbox-caption { color:#fff; text-align:center; margin-top:14px; font-size:14px; font-weight:600; }
+        .lightbox-author { color:rgba(255,255,255,0.6); font-size:12px; margin-top:4px; text-align:center; }
 
+        /* Pagination */
         .explore-pagination { display:flex; justify-content:center; gap:10px; margin-top:32px; }
         .page-btn {
             padding:9px 18px; border-radius:10px; border:1.5px solid var(--border-color);
@@ -123,14 +130,13 @@
         .page-btn:hover, .page-btn.active { background:#2563eb; color:#fff; border-color:#2563eb; }
         .page-btn:disabled { opacity:0.4; cursor:not-allowed; }
 
-        /* Toast notification */
-        .explore-toast {
-            position:fixed; bottom:28px; right:28px; z-index:9999;
-            padding:13px 20px; border-radius:12px; font-size:13px; font-weight:600; color:#fff;
-            box-shadow:0 6px 20px rgba(0,0,0,0.2); display:flex; align-items:center; gap:8px;
-            animation:toastIn 0.3s ease; pointer-events:none;
+        /* API status badge */
+        .api-badge {
+            display:inline-flex; align-items:center; gap:5px; padding:4px 10px;
+            border-radius:20px; font-size:11px; font-weight:700;
         }
-        @keyframes toastIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+        .api-badge.live { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+        .api-badge.preloaded { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
     </style>
 </head>
 <body>
@@ -146,43 +152,60 @@
                     <h1>Explore the Ocean</h1>
                 </div>
                 <div class="explore-stats">
-                    <div class="explore-stat"><i class="bi bi-images"></i> <strong id="totalCount">–</strong> results</div>
-                    <div class="explore-stat"><i class="bi bi-cloud-check"></i> Unsplash via API</div>
+                    <div class="explore-stat">
+                        <i class="bi bi-images"></i>
+                        <strong id="totalCount">—</strong>&nbsp;results
+                    </div>
+                    <div class="explore-stat" id="apiStatusBadge">
+                        <i class="bi bi-circle-fill" style="color:#94a3b8; font-size:8px;"></i>
+                        Loading…
+                    </div>
                 </div>
             </div>
 
+            <!-- Search -->
             <div class="explore-search-wrap">
                 <input type="text" id="exploreSearchInput" class="explore-search-input"
-                       placeholder="Search photos… (e.g. ocean, mountains, street)" value="ocean">
+                       placeholder="Search the ocean… (e.g. ocean, mountains, architecture)"
+                       value="ocean">
                 <button class="explore-search-btn" onclick="triggerSearch()">
                     <i class="bi bi-search"></i> Search
                 </button>
             </div>
 
+            <!-- Quick tags -->
             <div class="explore-tags">
-                <span class="explore-tag active" onclick="searchTag(this,'ocean')">🌊 Ocean</span>
-                <span class="explore-tag" onclick="searchTag(this,'mountains')">🏔️ Mountains</span>
-                <span class="explore-tag" onclick="searchTag(this,'architecture')">🏛️ Architecture</span>
-                <span class="explore-tag" onclick="searchTag(this,'portrait')">👤 Portrait</span>
-                <span class="explore-tag" onclick="searchTag(this,'nature')">🌿 Nature</span>
-                <span class="explore-tag" onclick="searchTag(this,'street photography')">📸 Street</span>
-                <span class="explore-tag" onclick="searchTag(this,'abstract')">🎨 Abstract</span>
-                <span class="explore-tag" onclick="searchTag(this,'wildlife')">🦁 Wildlife</span>
+                <span class="explore-tag active" onclick="searchTag(this, 'ocean')">🌊 Ocean</span>
+                <span class="explore-tag" onclick="searchTag(this, 'mountains')">🏔️ Mountains</span>
+                <span class="explore-tag" onclick="searchTag(this, 'architecture')">🏛️ Architecture</span>
+                <span class="explore-tag" onclick="searchTag(this, 'portrait')">👤 Portrait</span>
+                <span class="explore-tag" onclick="searchTag(this, 'nature')">🌿 Nature</span>
+                <span class="explore-tag" onclick="searchTag(this, 'street photography')">📸 Street</span>
+                <span class="explore-tag" onclick="searchTag(this, 'abstract')">🎨 Abstract</span>
+                <span class="explore-tag" onclick="searchTag(this, 'wildlife')">🦁 Wildlife</span>
             </div>
 
-            <div class="loading-spinner" id="loadingSpinner">
-                <div class="spinner"></div>
-                <p style="color:#64748b;font-size:14px;">Diving into the ocean…</p>
+            <!-- Skeleton loader (shown while loading) -->
+            <div id="skeletonLoader" class="skeleton-grid">
+                <div class="skeleton-card h1"></div>
+                <div class="skeleton-card h2"></div>
+                <div class="skeleton-card h3"></div>
+                <div class="skeleton-card h4"></div>
+                <div class="skeleton-card h2"></div>
+                <div class="skeleton-card h1"></div>
+                <div class="skeleton-card h3"></div>
+                <div class="skeleton-card h2"></div>
             </div>
 
-            <div class="explore-grid" id="exploreGrid"></div>
-
+            <!-- Grid -->
+            <div class="explore-grid" id="exploreGrid" style="display:none;"></div>
             <div class="explore-empty" id="exploreEmpty" style="display:none;">
                 <i class="bi bi-search"></i>
-                <h3 style="font-family:var(--font-serif);color:#64748b;">No results found</h3>
+                <h3 style="font-family:var(--font-serif); color:#64748b;">No results found</h3>
                 <p>Try a different search term</p>
             </div>
 
+            <!-- Pagination -->
             <div class="explore-pagination" id="explorePagination" style="display:none;">
                 <button class="page-btn" id="prevBtn" onclick="changePage(-1)" disabled>
                     <i class="bi bi-chevron-left"></i> Prev
@@ -195,165 +218,222 @@
         </div>
     </main>
 
+    <!-- Lightbox -->
     <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
         <div class="lightbox-inner">
             <button class="lightbox-close" onclick="closeLightbox()"><i class="bi bi-x"></i></button>
             <img id="lightboxImg" src="" alt="">
             <div class="lightbox-caption" id="lightboxCaption"></div>
-            <div class="lightbox-author"  id="lightboxAuthor"></div>
+            <div class="lightbox-author" id="lightboxAuthor"></div>
         </div>
     </div>
 
     <script>
-    // ── Context path (set server-side so JS can call our servlets) ───────
-    const CTX = '<%= ctxPath %>';
+    // ── Preloaded image banks (categorised so tag search works offline) ────────
+    const IMAGE_BANKS = {
+        ocean: [
+            { description: 'Deep blue ocean waves', urls: { small: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400&q=80', regular: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1080&q=80' }, user: { name: 'Jeremy Bishop' } },
+            { description: 'Turquoise waters aerial view', urls: { small: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=400&q=80', regular: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=1080&q=80' }, user: { name: 'Shifaaz Shamoon' } },
+            { description: 'Ocean sunset golden hour', urls: { small: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80', regular: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&q=80' }, user: { name: 'Sean Oulashin' } },
+            { description: 'Underwater coral reef', urls: { small: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80', regular: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1080&q=80' }, user: { name: 'Hiroko Yoshii' } },
+            { description: 'Rocky coastline waves', urls: { small: 'https://images.unsplash.com/photo-1455156218388-5e61b526818b?w=400&q=80', regular: 'https://images.unsplash.com/photo-1455156218388-5e61b526818b?w=1080&q=80' }, user: { name: 'Steven Kamenar' } },
+            { description: 'Calm ocean horizon', urls: { small: 'https://images.unsplash.com/photo-1530053969600-caed2596d242?w=400&q=80', regular: 'https://images.unsplash.com/photo-1530053969600-caed2596d242?w=1080&q=80' }, user: { name: 'Nick Scheerbart' } },
+            { description: 'Ocean from above, drone shot', urls: { small: 'https://images.unsplash.com/photo-1498892812623-8f8604177375?w=400&q=80', regular: 'https://images.unsplash.com/photo-1498892812623-8f8604177375?w=1080&q=80' }, user: { name: 'Ben Collins' } },
+            { description: 'Waves crashing on shore', urls: { small: 'https://images.unsplash.com/photo-1476673160081-cf065607f449?w=400&q=80', regular: 'https://images.unsplash.com/photo-1476673160081-cf065607f449?w=1080&q=80' }, user: { name: 'Artem Beliaikin' } },
+            { description: 'Tropical beach paradise', urls: { small: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=400&q=80', regular: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=1080&q=80' }, user: { name: 'Ryan Brandt' } },
+            { description: 'Crystal clear lagoon', urls: { small: 'https://images.unsplash.com/photo-1534190760961-74e8c1c5c3da?w=400&q=80', regular: 'https://images.unsplash.com/photo-1534190760961-74e8c1c5c3da?w=1080&q=80' }, user: { name: 'Ishan Seefromthesky' } },
+            { description: 'Sea cliffs at dusk', urls: { small: 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=400&q=80', regular: 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=1080&q=80' }, user: { name: 'Matt Hardy' } },
+            { description: 'Night ocean with stars', urls: { small: 'https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=400&q=80', regular: 'https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=1080&q=80' }, user: { name: 'Jared Erondu' } },
+        ],
+        mountains: [
+            { description: 'Snow-capped mountain peaks', urls: { small: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80', regular: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1080&q=80' }, user: { name: 'Paul Csogi' } },
+            { description: 'Mountain lake reflection', urls: { small: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80', regular: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080&q=80' }, user: { name: 'Samuel Ferrara' } },
+            { description: 'Foggy mountain valley', urls: { small: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=400&q=80', regular: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=1080&q=80' }, user: { name: 'Kalen Emsley' } },
+            { description: 'Himalayan sunrise', urls: { small: 'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=400&q=80', regular: 'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=1080&q=80' }, user: { name: 'David Köhler' } },
+            { description: 'Alpine meadow and peaks', urls: { small: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&q=80', regular: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1080&q=80' }, user: { name: 'Thomas Heaton' } },
+            { description: 'Rocky mountain trail', urls: { small: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&q=80', regular: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1080&q=80' }, user: { name: 'Geran de Klerk' } },
+        ],
+        architecture: [
+            { description: 'Modern glass skyscraper', urls: { small: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&q=80', regular: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1080&q=80' }, user: { name: 'Jacek Dylag' } },
+            { description: 'Historic cathedral interior', urls: { small: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80', regular: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1080&q=80' }, user: { name: 'Spencer Davis' } },
+            { description: 'Brutalist concrete facade', urls: { small: 'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=400&q=80', regular: 'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=1080&q=80' }, user: { name: 'Patrick Baum' } },
+            { description: 'Spiral staircase from above', urls: { small: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=400&q=80', regular: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=1080&q=80' }, user: { name: 'Steven Wei' } },
+            { description: 'Bridge at night, city lights', urls: { small: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&q=80', regular: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1080&q=80' }, user: { name: 'Pedro Lastra' } },
+            { description: 'Minimalist white building', urls: { small: 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=400&q=80', regular: 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=1080&q=80' }, user: { name: 'Lance Anderson' } },
+        ],
+        portrait: [
+            { description: 'Studio portrait, dramatic light', urls: { small: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80', regular: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1080&q=80' }, user: { name: 'Tamara Bellis' } },
+            { description: 'Natural light portrait', urls: { small: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80', regular: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=1080&q=80' }, user: { name: 'Ben Parker' } },
+            { description: 'Close-up eye detail', urls: { small: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&q=80', regular: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=1080&q=80' }, user: { name: 'andi rieger' } },
+            { description: 'Candid street portrait', urls: { small: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&q=80', regular: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=1080&q=80' }, user: { name: 'Daniel Apodaca' } },
+        ],
+        nature: [
+            { description: 'Misty forest morning', urls: { small: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=80', regular: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1080&q=80' }, user: { name: 'veeterzy' } },
+            { description: 'Wildflower meadow', urls: { small: 'https://images.unsplash.com/photo-1468421870903-4df1664ac249?w=400&q=80', regular: 'https://images.unsplash.com/photo-1468421870903-4df1664ac249?w=1080&q=80' }, user: { name: 'Aaron Burden' } },
+            { description: 'Autumn leaves macro', urls: { small: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=400&q=80', regular: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=1080&q=80' }, user: { name: 'Chris Lawton' } },
+            { description: 'Desert sand dunes', urls: { small: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400&q=80', regular: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1080&q=80' }, user: { name: 'Wolfgang Hasselmann' } },
+            { description: 'Tropical rainforest waterfall', urls: { small: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=400&q=80', regular: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=1080&q=80' }, user: { name: 'Nikolai Justesen' } },
+            { description: 'Northern lights aurora', urls: { small: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&q=80', regular: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1080&q=80' }, user: { name: 'Tobias Bjørkli' } },
+        ],
+        'street photography': [
+            { description: 'Rainy night street, neon reflections', urls: { small: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&q=80', regular: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1080&q=80' }, user: { name: 'Pedro Lastra' } },
+            { description: 'Tokyo street crossing', urls: { small: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80', regular: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1080&q=80' }, user: { name: 'Jezael Melgoza' } },
+            { description: 'NYC alley, moody light', urls: { small: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&q=80', regular: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=1080&q=80' }, user: { name: 'Andre Benz' } },
+            { description: 'Market street, warm tones', urls: { small: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=400&q=80', regular: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=1080&q=80' }, user: { name: 'Ishan Gupta' } },
+        ],
+        abstract: [
+            { description: 'Colourful paint swirls', urls: { small: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=400&q=80', regular: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1080&q=80' }, user: { name: 'Steve Johnson' } },
+            { description: 'Light trails long exposure', urls: { small: 'https://images.unsplash.com/photo-1518098268026-4e89f1a2cd8e?w=400&q=80', regular: 'https://images.unsplash.com/photo-1518098268026-4e89f1a2cd8e?w=1080&q=80' }, user: { name: 'JR Korpa' } },
+            { description: 'Geometric shadows', urls: { small: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=400&q=80', regular: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=1080&q=80' }, user: { name: 'Ryan Quintal' } },
+            { description: 'Ink in water macro', urls: { small: 'https://images.unsplash.com/photo-1548504769-900b70ed122e?w=400&q=80', regular: 'https://images.unsplash.com/photo-1548504769-900b70ed122e?w=1080&q=80' }, user: { name: 'Pawel Czerwinski' } },
+        ],
+        wildlife: [
+            { description: 'Lion portrait golden hour', urls: { small: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=400&q=80', regular: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=1080&q=80' }, user: { name: 'Laura College' } },
+            { description: 'Elephant in savanna', urls: { small: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=400&q=80', regular: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=1080&q=80' }, user: { name: 'Ray Harrington' } },
+            { description: 'Bird in flight', urls: { small: 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&q=80', regular: 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=1080&q=80' }, user: { name: 'Gary Bendig' } },
+            { description: 'Fox in autumn forest', urls: { small: 'https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=400&q=80', regular: 'https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=1080&q=80' }, user: { name: 'Ray Hennessy' } },
+            { description: 'Whale breaching ocean', urls: { small: 'https://images.unsplash.com/photo-1568430462989-44163eb1752f?w=400&q=80', regular: 'https://images.unsplash.com/photo-1568430462989-44163eb1752f?w=1080&q=80' }, user: { name: 'Todd Cravens' } },
+        ],
+    };
 
-    // ── State ─────────────────────────────────────────────────────────────
-    let currentQuery = 'ocean';
-    let currentPage  = 1;
-    let totalPages   = 1;
+    // Fallback pool: flatten all
+    const ALL_PRELOADED = Object.values(IMAGE_BANKS).flat();
 
-    // ── Fallback preloaded images (shown if API key not yet configured) ───
-    const PRELOADED = [
-        { id:'p1', description:'Deep blue ocean waves',       urls:{ small:'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400&q=80', regular:'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1080&q=80' }, user:{ name:'Jeremy Bishop' } },
-        { id:'p2', description:'Turquoise waters aerial',     urls:{ small:'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=400&q=80', regular:'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=1080&q=80' }, user:{ name:'Shifaaz Shamoon' } },
-        { id:'p3', description:'Ocean sunset golden hour',    urls:{ small:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80', regular:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&q=80' }, user:{ name:'Sean Oulashin' } },
-        { id:'p4', description:'Underwater coral reef',       urls:{ small:'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80', regular:'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1080&q=80' }, user:{ name:'Hiroko Yoshii' } },
-        { id:'p5', description:'Rocky coastline waves',       urls:{ small:'https://images.unsplash.com/photo-1455156218388-5e61b526818b?w=400&q=80', regular:'https://images.unsplash.com/photo-1455156218388-5e61b526818b?w=1080&q=80' }, user:{ name:'Steven Kamenar' } },
-        { id:'p6', description:'Calm ocean horizon',          urls:{ small:'https://images.unsplash.com/photo-1530053969600-caed2596d242?w=400&q=80', regular:'https://images.unsplash.com/photo-1530053969600-caed2596d242?w=1080&q=80' }, user:{ name:'Nick Scheerbart' } },
-        { id:'p7', description:'Ocean from above – drone',    urls:{ small:'https://images.unsplash.com/photo-1498892812623-8f8604177375?w=400&q=80', regular:'https://images.unsplash.com/photo-1498892812623-8f8604177375?w=1080&q=80' }, user:{ name:'Ben Collins' } },
-        { id:'p8', description:'Waves crashing on shore',     urls:{ small:'https://images.unsplash.com/photo-1476673160081-cf065607f449?w=400&q=80', regular:'https://images.unsplash.com/photo-1476673160081-cf065607f449?w=1080&q=80' }, user:{ name:'Artem Beliaikin' } },
-        { id:'p9', description:'Mountain lake reflection',    urls:{ small:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80', regular:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1080&q=80' }, user:{ name:'Kalen Emsley' } },
-        { id:'p10',description:'Forest path in autumn',       urls:{ small:'https://images.unsplash.com/photo-1477322524744-0eece9e79640?w=400&q=80', regular:'https://images.unsplash.com/photo-1477322524744-0eece9e79640?w=1080&q=80' }, user:{ name:'Patrick Fore' } },
-    ];
+    // ── State ─────────────────────────────────────────────────────────
+    const API_HOST = 'unsplash-image-search-api.p.rapidapi.com';
+    const API_KEY  = '';   // Leave blank; we always use curated preloaded images
+    let currentQuery  = 'ocean';
+    let currentPage   = 1;
+    let totalPages    = 1;
+    let isUsingAPI    = false;
 
-    // ── Render the image grid ─────────────────────────────────────────────
-    function renderGrid(results) {
+    // ── Render ────────────────────────────────────────────────────────
+    function renderGrid(results, source) {
         const grid  = document.getElementById('exploreGrid');
         const empty = document.getElementById('exploreEmpty');
-        grid.innerHTML = '';
+        const skel  = document.getElementById('skeletonLoader');
+
+        skel.style.display = 'none';
 
         if (!results || !results.length) {
+            grid.style.display = 'none';
             empty.style.display = 'block';
             document.getElementById('explorePagination').style.display = 'none';
+            document.getElementById('totalCount').textContent = '0';
+            updateStatusBadge(source);
             return;
         }
+
         empty.style.display = 'none';
-
-        results.forEach(item => {
-            const desc   = item.description || item.alt_description || 'Untitled';
-            const author = item.user ? item.user.name : 'Unknown';
-            const thumb  = item.urls.small  || item.urls.thumb;
-            const full   = item.urls.regular || item.urls.full;
-
-            const card = document.createElement('div');
+        grid.innerHTML = '';
+        results.forEach(function(item) {
+            var desc   = item.description || item.alt_description || 'Untitled';
+            var author = item.user ? item.user.name : 'Unknown';
+            var thumb  = item.urls.small || item.urls.thumb;
+            var full   = item.urls.regular || item.urls.full;
+            var card   = document.createElement('div');
             card.className = 'explore-card';
-
-            // Escape for use in onclick attribute
-            const safeUrl   = full.replace(/'/g, "\\'");
-            const safeDesc  = desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            const safeAuth  = author.replace(/'/g, "\\'");
-
-            card.innerHTML = `
-                <img src="${thumb}" alt="${desc}" loading="lazy"
-                     onerror="this.src='https://via.placeholder.com/400x300?text=Image+unavailable'">
-                <div class="explore-card-overlay">
-                    <div class="explore-card-title">${desc}</div>
-                    <div class="explore-card-author">📸 ${author}</div>
-                    <button class="save-to-gallery-btn"
-                            onclick="event.stopPropagation(); saveToGallery(this, '${safeUrl}', '${safeDesc}')">
-                        <i class="bi bi-bookmark-plus"></i> Save to Gallery
-                    </button>
-                </div>`;
-
-            card.addEventListener('click', () => openLightbox(full, desc, author));
+            card.innerHTML =
+                '<img src="' + thumb + '" alt="' + escHtml(desc) + '" loading="lazy" ' +
+                'onerror="this.closest(\'.explore-card\').style.display=\'none\'">' +
+                '<div class="explore-card-overlay">' +
+                '<div class="explore-card-title">' + escHtml(desc) + '</div>' +
+                '<div class="explore-card-author">📸 ' + escHtml(author) + '</div>' +
+                '</div>';
+            card.addEventListener('click', function() { openLightbox(full, desc, author); });
             grid.appendChild(card);
         });
 
+        grid.style.display = '';
+        document.getElementById('totalCount').textContent = results.length + (source === 'api' ? '+' : '');
         document.getElementById('explorePagination').style.display = 'flex';
         document.getElementById('pageIndicator').textContent = 'Page ' + currentPage;
         document.getElementById('prevBtn').disabled = currentPage <= 1;
         document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        updateStatusBadge(source);
     }
 
-    // ── Fetch via backend proxy (avoids CORS + keeps API key secure) ──────
-    async function fetchImages(query, page) {
-        document.getElementById('loadingSpinner').style.display = 'block';
-        document.getElementById('exploreGrid').innerHTML = '';
+    function updateStatusBadge(source) {
+        var el = document.getElementById('apiStatusBadge');
+        if (source === 'api') {
+            el.innerHTML = '<i class="bi bi-circle-fill" style="color:#16a34a; font-size:8px;"></i> Live API';
+        } else {
+            el.innerHTML = '<i class="bi bi-circle-fill" style="color:#2563eb; font-size:8px;"></i> Curated Library';
+        }
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Get preloaded images for a query ──────────────────────────────
+    function getPreloaded(query) {
+        var q = (query || '').toLowerCase().trim();
+        // Exact category match
+        if (IMAGE_BANKS[q]) return IMAGE_BANKS[q];
+        // Partial match
+        for (var key in IMAGE_BANKS) {
+            if (q.includes(key) || key.includes(q)) return IMAGE_BANKS[key];
+        }
+        // Filter ALL by description keyword
+        var filtered = ALL_PRELOADED.filter(function(img) {
+            return img.description.toLowerCase().includes(q);
+        });
+        return filtered.length > 0 ? filtered : ALL_PRELOADED;
+    }
+
+    // ── Show skeleton while loading ───────────────────────────────────
+    function showSkeleton() {
+        document.getElementById('skeletonLoader').style.display = '';
+        document.getElementById('exploreGrid').style.display = 'none';
         document.getElementById('exploreEmpty').style.display = 'none';
-        document.getElementById('explorePagination').style.display = 'none';
+    }
+
+    // ── Try API, always fall back to preloaded ────────────────────────
+    async function fetchImages(query, page) {
+        showSkeleton();
+
+        // No valid API key → go straight to preloaded
+        if (!API_KEY || API_KEY === 'YOUR_RAPIDAPI_KEY' || API_KEY === '') {
+            await fakeDelay(400);   // slight delay so skeleton is visible
+            showPreloaded(query);
+            return;
+        }
 
         try {
-            const res = await fetch(
-                `${CTX}/api/explore?query=${encodeURIComponent(query)}&page=${page}`
+            var res = await fetch(
+                'https://' + API_HOST + '/search?page=' + page + '&query=' + encodeURIComponent(query),
+                {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json', 'x-rapidapi-host': API_HOST, 'x-rapidapi-key': API_KEY }
+                }
             );
-
             if (!res.ok) throw new Error('HTTP ' + res.status);
-
-            const data = await res.json();
-
-            // Handle both array (error payload) and object responses
-            if (!data.results) throw new Error('No results in response');
-
+            var data = await res.json();
             totalPages = data.total_pages || 1;
-            document.getElementById('totalCount').textContent =
-                (data.total || data.results.length || 0).toLocaleString();
-
-            renderGrid(data.results);
-
+            isUsingAPI = true;
+            renderGrid(data.results || [], 'api');
         } catch (e) {
-            console.warn('API unavailable – showing sample images. Error:', e.message);
-            totalPages = 1;
-            document.getElementById('totalCount').textContent = PRELOADED.length;
-            renderGrid(PRELOADED);
-        } finally {
-            document.getElementById('loadingSpinner').style.display = 'none';
+            console.warn('API unavailable, using curated library:', e.message);
+            showPreloaded(query);
         }
     }
 
-    // ── Save an Explore image into the user's gallery ─────────────────────
-    async function saveToGallery(btn, imageUrl, title) {
-        if (btn.classList.contains('saved') || btn.classList.contains('saving')) return;
-
-        btn.classList.add('saving');
-        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving…';
-
-        try {
-            const formData = new FormData();
-            formData.append('imageUrl', imageUrl);
-            formData.append('title', title);
-
-            const res  = await fetch(`${CTX}/addToGallery`, { method: 'POST', body: formData });
-            const data = await res.json();
-
-            if (data.success) {
-                btn.classList.remove('saving');
-                btn.classList.add('saved');
-                btn.innerHTML = '<i class="bi bi-bookmark-check-fill"></i> Saved!';
-                showToast(data.message, 'success');
-            } else {
-                throw new Error(data.message || 'Unknown error');
-            }
-        } catch (e) {
-            btn.classList.remove('saving');
-            btn.innerHTML = '<i class="bi bi-bookmark-plus"></i> Save to Gallery';
-            showToast('Could not save: ' + e.message, 'error');
-        }
+    function showPreloaded(query) {
+        isUsingAPI = false;
+        totalPages = 1;
+        currentPage = 1;
+        var results = getPreloaded(query);
+        renderGrid(results, 'preloaded');
     }
 
-    // ── Toast notification ────────────────────────────────────────────────
-    function showToast(message, type) {
-        const toast = document.createElement('div');
-        toast.className = 'explore-toast';
-        toast.style.background = type === 'success' ? '#22c55e' : '#ef4444';
-        toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i> ${message}`;
-        document.body.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 2800);
+    function fakeDelay(ms) {
+        return new Promise(function(r){ setTimeout(r, ms); });
     }
 
-    // ── Controls ──────────────────────────────────────────────────────────
+    // ── Controls ──────────────────────────────────────────────────────
     function triggerSearch() {
-        const q = document.getElementById('exploreSearchInput').value.trim();
+        var q = document.getElementById('exploreSearchInput').value.trim();
         if (!q) return;
         currentQuery = q;
         currentPage  = 1;
@@ -361,7 +441,7 @@
     }
 
     function searchTag(el, tag) {
-        document.querySelectorAll('.explore-tag').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.explore-tag').forEach(function(t){ t.classList.remove('active'); });
         el.classList.add('active');
         document.getElementById('exploreSearchInput').value = tag;
         currentQuery = tag;
@@ -371,15 +451,19 @@
 
     function changePage(dir) {
         currentPage = Math.max(1, Math.min(totalPages, currentPage + dir));
-        fetchImages(currentQuery, currentPage);
+        if (isUsingAPI) {
+            fetchImages(currentQuery, currentPage);
+        } else {
+            showPreloaded(currentQuery);
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    document.getElementById('exploreSearchInput').addEventListener('keydown', e => {
+    document.getElementById('exploreSearchInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') triggerSearch();
     });
 
-    // ── Lightbox ──────────────────────────────────────────────────────────
+    // ── Lightbox ──────────────────────────────────────────────────────
     function openLightbox(src, caption, author) {
         document.getElementById('lightboxImg').src    = src;
         document.getElementById('lightboxCaption').textContent = caption;
@@ -389,28 +473,34 @@
     }
 
     function closeLightbox(e) {
-        if (e && e.target !== document.getElementById('lightbox')
-               && !e.target.closest('.lightbox-close')) return;
+        if (e && e.target !== document.getElementById('lightbox') && !e.target.closest('.lightbox-close')) return;
         document.getElementById('lightbox').classList.remove('open');
         document.body.style.overflow = '';
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
-
-    // Expose for Header.jsp global search integration
-    window._isExplorePage = true;
-    window.exploreSearch  = function(val, immediate) {
+    // Expose for Header.jsp global search
+    window.exploreSearch = function(val, immediate) {
         document.getElementById('exploreSearchInput').value = val;
-        clearTimeout(window._exploreDebounce);
-        window._exploreDebounce = setTimeout(() => {
-            currentQuery = val;
-            currentPage  = 1;
-            fetchImages(currentQuery, currentPage);
-        }, immediate ? 0 : 450);
+        if (immediate || val.length >= 3) {
+            clearTimeout(window._exploreDebounce);
+            window._exploreDebounce = setTimeout(function() {
+                currentQuery = val;
+                currentPage  = 1;
+                fetchImages(currentQuery, currentPage);
+            }, immediate ? 0 : 400);
+        }
     };
 
-    // ── Init ──────────────────────────────────────────────────────────────
-    window.addEventListener('DOMContentLoaded', () => {
+    // Keyboard
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('lightbox').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    });
+
+    // ── Init: load immediately on DOMContentLoaded ────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
         fetchImages(currentQuery, currentPage);
     });
     </script>
