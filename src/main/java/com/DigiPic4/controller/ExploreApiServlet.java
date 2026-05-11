@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpSession;
 public class ExploreApiServlet extends HttpServlet {
 
     // ── TODO: Paste your actual RapidAPI key here ──────────────────────────
-    private static final String RAPIDAPI_KEY = "YOUR_RAPIDAPI_KEY_HERE";
+    private static final String RAPIDAPI_KEY = "88689ceb4bmsh4efdac04205e16fp12e25djsn09594386af7";
     // ───────────────────────────────────────────────────────────────────────
 
     private static final String API_HOST =
