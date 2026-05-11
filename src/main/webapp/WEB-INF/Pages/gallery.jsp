@@ -190,10 +190,12 @@
 </head>
 <body>
 
-    <jsp:include page='<%= isAdmin ? "adminSidebar.jsp" : "sidebar.jsp" %>' />
+    <jsp:include page='<%= isAdmin ? "../components/adminSidebar.jsp" : "../components/sidebar.jsp" %>' />
+
 
     <main class="main-content">
-        <jsp:include page='<%= isAdmin ? "adminHeader.jsp" : "Header.jsp" %>' />
+           <jsp:include page='<%= isAdmin ? "../components/adminHeader.jsp" : "../components/Header.jsp" %>' />
+
 
         <div class="page-container">
 

@@ -121,12 +121,12 @@ public class MainController extends HttpServlet {
     }
 
     private void forward(HttpServletRequest req, HttpServletResponse res,
-                         String page, String activePage)
-            throws ServletException, IOException {
-        req.setAttribute("page", activePage);
-        req.getRequestDispatcher("/" + page).forward(req, res);
-    }
-
+            String page, String activePage)
+throws ServletException, IOException {
+req.setAttribute("page", activePage);
+req.getRequestDispatcher("/WEB-INF/Pages/" + page).forward(req, res);
+}
+    
     private void applyNoCache(HttpServletResponse res) {
         res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         res.setHeader("Pragma", "no-cache");

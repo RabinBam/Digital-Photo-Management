@@ -51,7 +51,7 @@ public class UploadImportServlet extends HttpServlet {
         List<Album> albums = albumDAO.findAlbumsByUserId(user.getUserId());
         req.setAttribute("albums", albums);
 
-        req.getRequestDispatcher("/uploadImport.jsp").forward(req, res);
+        req.getRequestDispatcher("/WEB-INF/Pages/uploadImport.jsp").forward(req, res);
     }
 
     // ── POST ────────────────────────────────────────────────────────────────

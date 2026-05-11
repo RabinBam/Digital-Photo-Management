@@ -125,10 +125,10 @@
     </style>
 </head>
 <body>
-    <jsp:include page='<%= exploreIsAdmin ? "adminSidebar.jsp" : "sidebar.jsp" %>' />
+<jsp:include page='<%= exploreIsAdmin ? "../components/adminSidebar.jsp" : "../components/sidebar.jsp" %>' />
 
     <main class="main-content">
-        <jsp:include page='<%= exploreIsAdmin ? "adminHeader.jsp" : "Header.jsp" %>' />
+    <jsp:include page='<%= exploreIsAdmin ? "../components/adminHeader.jsp" : "../components/Header.jsp" %>' />
 
         <div class="page-content">
             <div class="section-header">

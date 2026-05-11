@@ -52,8 +52,8 @@ public class CaptainCabinServlet extends HttpServlet {
                 req.setAttribute("error", req.getParameter("error"));
             }
 
-            req.getRequestDispatcher("/captainCabin.jsp").forward(req, res);
-        } catch (Exception e) {
+            req.getRequestDispatcher("/WEB-INF/Pages/captainCabin.jsp").forward(req, res);
+            } catch (Exception e) {
             e.printStackTrace();
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);

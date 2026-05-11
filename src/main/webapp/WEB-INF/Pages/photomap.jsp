@@ -102,10 +102,10 @@
     </style>
 </head>
 <body>
-    <jsp:include page='<%= mapIsAdmin ? "adminSidebar.jsp" : "sidebar.jsp" %>' />
+<jsp:include page='<%= mapIsAdmin ? "../components/adminSidebar.jsp" : "../components/sidebar.jsp" %>' />
 
     <main class="main-content">
-        <jsp:include page='<%= mapIsAdmin ? "adminHeader.jsp" : "Header.jsp" %>' />
+    <jsp:include page='<%= mapIsAdmin ? "../components/adminHeader.jsp" : "../components/Header.jsp" %>' />
 
         <div class="page-content">
             <div class="section-header">

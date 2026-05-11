@@ -62,8 +62,8 @@ public class ProfileServlet extends HttpServlet {
                 userDAO.findAuditLogsByUser(profileUser.getUserId(), 10));
 
         passFlash(req);
-        req.getRequestDispatcher("/profile.jsp").forward(req, res);
-    }
+        req.getRequestDispatcher("/WEB-INF/Pages/profile.jsp").forward(req, res);   
+        }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res)

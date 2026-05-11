@@ -209,10 +209,10 @@
 </head>
 <body>
 
-    <jsp:include page='<%= albumsIsAdmin ? "adminSidebar.jsp" : "sidebar.jsp" %>' />
+<jsp:include page='<%= albumsIsAdmin ? "../components/adminSidebar.jsp" : "../components/sidebar.jsp" %>' />
 
     <main class="main-content">
-        <jsp:include page='<%= albumsIsAdmin ? "adminHeader.jsp" : "Header.jsp" %>' />
+    <jsp:include page='<%= albumsIsAdmin ? "../components/adminHeader.jsp" : "../components/Header.jsp" %>' />
 
         <div class="page-content">
             <div class="section-header">

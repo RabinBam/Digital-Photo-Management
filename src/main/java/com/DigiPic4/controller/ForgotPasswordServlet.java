@@ -27,7 +27,7 @@ public class ForgotPasswordServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
         applyNoCache(res);
-        req.getRequestDispatcher("/forgot-password.jsp").forward(req, res);
+        req.getRequestDispatcher("/WEB-INF/Pages/forgot-password.jsp").forward(req, res);
     }
 
     @Override

@@ -31,10 +31,10 @@ public class ExploreServlet extends HttpServlet {
 
         if ("/explore".equals(path)) {
             request.setAttribute("page", "explore");
-            request.getRequestDispatcher("/explore.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/Pages/explore.jsp").forward(request, response);
         } else if ("/photomap".equals(path)) {
             request.setAttribute("page", "map");
-            request.getRequestDispatcher("/photomap.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/Pages/photomap.jsp").forward(request, response);
         } else {
             response.sendRedirect(request.getContextPath() + "/gallery");
         }

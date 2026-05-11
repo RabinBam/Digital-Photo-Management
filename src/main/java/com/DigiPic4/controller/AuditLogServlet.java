@@ -51,8 +51,7 @@ public class AuditLogServlet extends HttpServlet {
         req.setAttribute("filterUser", filterUser);
         req.setAttribute("allUsers", dao.findAllUsers());
 
-        req.getRequestDispatcher("/auditLog.jsp").forward(req, res);
-    }
+        req.getRequestDispatcher("/WEB-INF/Pages/auditLog.jsp").forward(req, res);    }
 
     private User requireAdmin(HttpServletRequest req, HttpServletResponse res) throws IOException {
         HttpSession session = req.getSession(false);

@@ -22,7 +22,7 @@ public class SignupServlet extends HttpServlet {
             res.sendRedirect(req.getContextPath() + "/gallery");
             return;
         }
-        req.getRequestDispatcher("/signup.jsp").forward(req, res);
+        req.getRequestDispatcher("/WEB-INF/Pages/signup.jsp").forward(req, res);
     }
 
     @Override

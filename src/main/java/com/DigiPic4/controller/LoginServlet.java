@@ -25,7 +25,7 @@ public class LoginServlet extends HttpServlet {
             res.sendRedirect(req.getContextPath() + dashboardPath(currentUser));
             return;
         }
-        req.getRequestDispatcher("/login.jsp").forward(req, res);
+        req.getRequestDispatcher("/WEB-INF/Pages/login.jsp").forward(req, res);
     }
 
     @Override
