@@ -24,8 +24,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Collections – DigiPic</title>
 
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style-light.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/sidebar-light.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/style-light.css">
+<link rel="stylesheet" href="<%= request.getContextPath() %>/css/sidebar-light.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
 

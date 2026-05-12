@@ -9,11 +9,11 @@
     String adminActivePage = "";
 
     if (adminUri != null) {
-        if (adminUri.endsWith("/albums"))                          { adminTitle = "Collections Overview";   adminSubtitle = "ADMIN CURATION HUB";    adminActivePage = "albums"; }
-        else if (adminUri.endsWith("/captain-cabin"))              { adminTitle = "Captain's Cabin";        adminSubtitle = "ADMIN CONTROL DECK";    adminActivePage = "captain"; }
-        else if (adminUri.endsWith("/uploadImport"))               { adminTitle = "Upload & Import";        adminSubtitle = "MEDIA MANAGEMENT";      adminActivePage = "upload"; }
-        else if (adminUri.endsWith("/audit-log"))                  { adminTitle = "Audit Logs";             adminSubtitle = "SYSTEM ACTIVITY LOGS";  adminActivePage = "audit"; }
-        else if (adminUri.endsWith("/gallery"))                    { adminTitle = "The Bio-Luminous Gallery"; adminSubtitle = "VAULT: PERSONAL ARCHIVES"; adminActivePage = "gallery"; }
+        if (adminUri.contains("/albums"))                          { adminTitle = "Collections Overview";   adminSubtitle = "ADMIN CURATION HUB";    adminActivePage = "albums"; }
+        else if (adminUri.contains("/captain-cabin"))              { adminTitle = "Captain's Cabin";        adminSubtitle = "ADMIN CONTROL DECK";    adminActivePage = "captain"; }
+        else if (adminUri.contains("/uploadImport"))               { adminTitle = "Upload & Import";        adminSubtitle = "MEDIA MANAGEMENT";      adminActivePage = "upload"; }
+        else if (adminUri.contains("/audit-log"))                  { adminTitle = "Audit Logs";             adminSubtitle = "SYSTEM ACTIVITY LOGS";  adminActivePage = "audit"; }
+        else if (adminUri.contains("/gallery"))                    { adminTitle = "The Bio-Luminous Gallery"; adminSubtitle = "VAULT: PERSONAL ARCHIVES"; adminActivePage = "gallery"; }
     }
 %>
 

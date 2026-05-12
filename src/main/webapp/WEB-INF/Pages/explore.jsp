@@ -300,8 +300,7 @@
     const ALL_PRELOADED = Object.values(IMAGE_BANKS).flat();
 
     // ── State ─────────────────────────────────────────────────────────
-    const API_HOST = 'unsplash-image-search-api.p.rapidapi.com';
-    const API_KEY  = '';   // Leave blank; we always use curated preloaded images
+    const API_ENDPOINT = '${pageContext.request.contextPath}/api/explore';
     let currentQuery  = 'ocean';
     let currentPage   = 1;
     let totalPages    = 1;
@@ -356,7 +355,7 @@
     function updateStatusBadge(source) {
         var el = document.getElementById('apiStatusBadge');
         if (source === 'api') {
-            el.innerHTML = '<i class="bi bi-circle-fill" style="color:#16a34a; font-size:8px;"></i> Live API';
+            el.innerHTML = '<i class="bi bi-circle-fill" style="color:#16a34a; font-size:8px;"></i> Live API via server';
         } else {
             el.innerHTML = '<i class="bi bi-circle-fill" style="color:#2563eb; font-size:8px;"></i> Curated Library';
         }
@@ -393,21 +392,11 @@
     async function fetchImages(query, page) {
         showSkeleton();
 
-        // No valid API key → go straight to preloaded
-        if (!API_KEY || API_KEY === 'YOUR_RAPIDAPI_KEY' || API_KEY === '') {
-            await fakeDelay(400);   // slight delay so skeleton is visible
-            showPreloaded(query);
-            return;
-        }
-
         try {
-            var res = await fetch(
-                'https://' + API_HOST + '/search?page=' + page + '&query=' + encodeURIComponent(query),
-                {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json', 'x-rapidapi-host': API_HOST, 'x-rapidapi-key': API_KEY }
-                }
-            );
+            var res = await fetch(API_ENDPOINT + '?page=' + encodeURIComponent(page) + '&query=' + encodeURIComponent(query), {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             var data = await res.json();
             totalPages = data.total_pages || 1;
@@ -425,10 +414,6 @@
         currentPage = 1;
         var results = getPreloaded(query);
         renderGrid(results, 'preloaded');
-    }
-
-    function fakeDelay(ms) {
-        return new Promise(function(r){ setTimeout(r, ms); });
     }
 
     // ── Controls ──────────────────────────────────────────────────────
