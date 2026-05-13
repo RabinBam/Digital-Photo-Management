@@ -15,12 +15,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Explore the Ocean – DigiPic</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style-light.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/sidebar-light.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style-light.css?v=<%= System.currentTimeMillis() %>">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/sidebar-light.css?v=<%= System.currentTimeMillis() %>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Sora:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --font-serif: 'Cormorant Garamond', serif; --font-sans: 'Sora', sans-serif; }
+        
+        body {
+            background-color: #f8fafb;
+            color: #1e293b;
+            font-family: var(--font-sans);
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+            background-color: #f8fafb;
+            display: flex;
+            flex-direction: column;
+        }
 
         .page-content { max-width: 1400px; margin: 0 auto; padding: 0 24px 40px; }
 
@@ -399,9 +419,19 @@
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             var data = await res.json();
-            totalPages = data.total_pages || 1;
+            
+            // New API might return an array directly or a results object
+            var results = [];
+            if (Array.isArray(data)) {
+                results = data;
+                totalPages = 10; // Assume 10 pages if array, or implement header check if needed
+            } else {
+                results = data.results || data.images || [];
+                totalPages = data.total_pages || 10;
+            }
+            
             isUsingAPI = true;
-            renderGrid(data.results || [], 'api');
+            renderGrid(results, 'api');
         } catch (e) {
             console.warn('API unavailable, using curated library:', e.message);
             showPreloaded(query);
@@ -490,4 +520,7 @@
     });
     </script>
 </body>
+<script>
+    console.log("Context Path: ${pageContext.request.contextPath}");
+</script>
 </html>

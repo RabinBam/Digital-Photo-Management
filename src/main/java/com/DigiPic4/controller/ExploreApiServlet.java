@@ -20,11 +20,11 @@ import jakarta.servlet.http.HttpSession;
 public class ExploreApiServlet extends HttpServlet {
 
     // ── TODO: Paste your actual RapidAPI key here ──────────────────────────
-    private static final String RAPIDAPI_KEY = "88689ceb4bmsh4efdac04205e16fp12e25djsn09594386af7";
+    private static final String RAPIDAPI_KEY = "88689ceb4bmsh4efdac04205e16fp12e25djsn09594386af76";
     // ───────────────────────────────────────────────────────────────────────
 
     private static final String API_HOST =
-            "unsplash-image-search-api.p.rapidapi.com";
+            "royalty-free-images-unsplesh-api.p.rapidapi.com";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
@@ -42,10 +42,10 @@ public class ExploreApiServlet extends HttpServlet {
         if (query == null || query.isBlank()) query = "ocean";
         if (page  == null || page.isBlank())  page  = "1";
 
-        String apiUrl = "https://" + API_HOST + "/search?page="
-                + URLEncoder.encode(page,  StandardCharsets.UTF_8)
-                + "&query="
-                + URLEncoder.encode(query, StandardCharsets.UTF_8);
+        String apiUrl = "https://" + API_HOST + "/getImages?query="
+                + URLEncoder.encode(query, StandardCharsets.UTF_8)
+                + "&page="
+                + URLEncoder.encode(page,  StandardCharsets.UTF_8);
 
         HttpURLConnection conn = null;
         try {

@@ -3,7 +3,7 @@
 <html>
 <head>
     <title>DigiPic - Login</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css?v=<%= System.currentTimeMillis() %>">
     <style>
         body { position: relative; overflow: hidden; }
         .bg-video {

@@ -91,12 +91,74 @@
 </div>
 
 <style>
-    .nav-links a i { margin-right: 8px; }
+    /* Critical Sidebar Layout */
+    .sidebar {
+        width: 250px;
+        background-color: var(--bg-surface, #ffffff);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        border-right: 1px solid var(--border-color, #e2e8f0);
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    .logo {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 24px;
+        font-weight: 800;
+        font-family: 'Playfair Display', serif;
+        margin-bottom: 40px;
+    }
+
+    .logo span {
+        font-size: 12px;
+        color: #94a3b8;
+        display: block;
+        font-weight: 500;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        margin-top: 4px;
+    }
+
+    .nav-links {
+        list-style: none;
+        flex-grow: 1;
+        padding: 0;
+        margin: 0;
+    }
+
+    .nav-links li { margin-bottom: 12px; }
+
+    .nav-links a {
+        color: #64748b;
+        text-decoration: none;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        gap: 12px;
+    }
+
+    .nav-links a i { font-size: 18px; }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+        background: #f0f4f8;
+        color: #2563eb;
+    }
 
     .sidebar-footer {
         margin-top: auto;
         padding-top: 16px;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid var(--border-color, #e2e8f0);
     }
 
     .sidebar-user-card {
@@ -104,7 +166,7 @@
         border-radius: 12px; text-decoration: none; transition: background 0.2s; cursor: pointer;
     }
 
-    .sidebar-user-card:hover { background: var(--bg-surface-light); }
+    .sidebar-user-card:hover { background: var(--bg-surface-light, #f0f4f8); }
 
     .user-avatar {
         width: 36px; height: 36px; border-radius: 50%;
@@ -113,6 +175,6 @@
         font-size: 13px; font-weight: 700; flex-shrink: 0;
     }
 
-    .user-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-    .user-role { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
+    .user-name { font-size: 13px; font-weight: 700; color: var(--text-primary, #1e293b); }
+    .user-role { font-size: 11px; color: var(--text-muted, #94a3b8); text-transform: capitalize; }
 </style>
