@@ -9,6 +9,7 @@ import com.DigiPic4.dao.UserDAO;
 import com.DigiPic4.model.Album;
 import com.DigiPic4.model.Photo;
 import com.DigiPic4.model.User;
+import com.DigiPic4.util.MediaStorageUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -72,12 +73,25 @@ public class AddToGalleryServlet extends HttpServlet {
             return;
         }
 
-        // Persist photo — file_path stores the full external URL
+        // Persist photo inside WEB-INF/image/user/<id>/albums/<id>/...
         PhotoDAO photoDAO = new PhotoDAO();
         Photo photo = new Photo();
         photo.setTitle(title);
-        photo.setFilePath(imageUrl);   // external URL stored directly
         photo.setAlbumId(albumId);
+
+        try {
+            System.out.println("[AddToGallery] importing from Explore for user=" + user.getUserId() + " url=" + imageUrl + " into album=" + albumId);
+            String storedPath = MediaStorageUtil.storeRemoteUrl(getServletContext(), imageUrl,
+                    user.getUserId(), albumId);
+            System.out.println("[AddToGallery] storedPath=" + storedPath);
+            photo.setFilePath(storedPath);
+        } catch (IOException e) {
+            System.err.println("[AddToGallery] failed to import URL=" + imageUrl + " for user=" + user.getUserId());
+            e.printStackTrace();
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            res.getWriter().write("{\"success\":false,\"message\":\"Could not import image from URL: " + e.getMessage() + "\"}");
+            return;
+        }
 
         int newId = photoDAO.addPhoto(photo);
         if (newId > 0) {

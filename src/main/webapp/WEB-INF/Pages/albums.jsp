@@ -2,6 +2,7 @@
 <%@ page import="java.util.List, java.util.Map" %>
 <%@ page import="com.DigiPic4.model.User, com.DigiPic4.model.Album, com.DigiPic4.model.Photo" %>
 <%@ page import="com.DigiPic4.dao.PhotoDAO" %>
+<%@ page import="com.DigiPic4.util.MediaStorageUtil" %>
 <%
     User albumsUser = (User) session.getAttribute("user");
     if (albumsUser == null) { response.sendRedirect(request.getContextPath() + "/login"); return; }
@@ -245,10 +246,18 @@
                         StringBuilder photosJson = new StringBuilder("[");
                         for (int pi = 0; pi < albumPhotos.size(); pi++) {
                             Photo ph = albumPhotos.get(pi);
-                            String t = ph.getTitle() != null && !ph.getTitle().isEmpty() ? ph.getTitle() : ph.getFilePath();
-                            String src = request.getContextPath() + "/uploads/" + albumsUser.getUserId() + "/" + ph.getFilePath();
+                            String rawPath = ph.getFilePath() != null ? ph.getFilePath() : "";
+                            String t = ph.getTitle() != null && !ph.getTitle().isEmpty() ? ph.getTitle() : rawPath;
+                            String src;
+                            if (MediaStorageUtil.isRemoteUrl(rawPath) || rawPath.contains("/")) {
+                                src = MediaStorageUtil.resolveBrowserSrc(application, rawPath);
+                            } else {
+                                src = request.getContextPath() + "/uploads/" + albumsUser.getUserId() + "/" + rawPath;
+                            }
                             if (pi > 0) photosJson.append(",");
-                            photosJson.append("{\"src\":\"").append(src).append("\",\"title\":\"").append(t.replace("\"","\\\"")).append("\"}");
+                            photosJson.append("{\"src\":\"").append(src.replace("\"","\\\""))
+                                      .append("\",\"title\":\"").append(t.replace("\"","\\\""))
+                                      .append("\"}");
                         }
                         photosJson.append("]");
                 %>

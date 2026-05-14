@@ -157,6 +157,29 @@
         }
         .api-badge.live { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
         .api-badge.preloaded { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
+
+        .recent-float {
+            position: fixed; right: 18px; bottom: 18px; width: 250px; z-index: 1200;
+            background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color); border-radius: 16px; box-shadow: 0 16px 38px rgba(15,23,42,0.16);
+            overflow: hidden;
+        }
+        .recent-float-header {
+            padding: 12px 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+            color: #64748b; border-bottom: 1px solid var(--border-color); display:flex; align-items:center; gap:8px;
+        }
+        .recent-float-list { max-height: 260px; overflow-y: auto; }
+        .recent-float-item {
+            display:flex; gap:10px; padding: 10px 12px; align-items:center; cursor:pointer; text-decoration:none; color: inherit;
+            border-bottom: 1px solid rgba(148,163,184,0.16);
+        }
+        .recent-float-item:last-child { border-bottom:none; }
+        .recent-float-item:hover { background:#eff6ff; }
+        .recent-float-thumb { width: 42px; height: 42px; border-radius: 10px; object-fit:cover; flex-shrink:0; background:#e2e8f0; }
+        .recent-float-meta { min-width:0; }
+        .recent-float-title { font-size: 12px; font-weight: 700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .recent-float-sub { font-size: 10px; color:#94a3b8; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .recent-float-empty { padding: 14px; color:#94a3b8; font-size: 12px; text-align:center; }
     </style>
 </head>
 <body>
@@ -248,6 +271,11 @@
         </div>
     </div>
 
+    <div class="recent-float" id="recentFloat">
+        <div class="recent-float-header"><i class="bi bi-clock-history"></i> Recent images</div>
+        <div class="recent-float-list" id="recentFloatList"></div>
+    </div>
+
     <script>
     // ── Preloaded image banks (categorised so tag search works offline) ────────
     const IMAGE_BANKS = {
@@ -325,6 +353,42 @@
     let currentPage   = 1;
     let totalPages    = 1;
     let isUsingAPI    = false;
+    const RECENT_KEY  = 'digipic_recent_media';
+
+    function loadRecentMedia() {
+        try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch (e) { return []; }
+    }
+
+    function saveRecentMedia(items) {
+        localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, 8)));
+        renderRecentMedia();
+    }
+
+    function rememberRecentMedia(item) {
+        if (!item || !item.src) return;
+        const items = loadRecentMedia().filter(function (entry) { return entry.src !== item.src; });
+        items.unshift({ src: item.src, title: item.title || 'Untitled', sub: item.sub || 'Explore' });
+        saveRecentMedia(items);
+    }
+
+    function renderRecentMedia() {
+        const host = document.getElementById('recentFloatList');
+        if (!host) return;
+        const items = loadRecentMedia();
+        if (!items.length) {
+            host.innerHTML = '<div class="recent-float-empty">Click a photo in Explore or Gallery to pin it here.</div>';
+            return;
+        }
+        host.innerHTML = items.map(function (item) {
+            return '<a class="recent-float-item" href="' + item.src + '" target="_blank" rel="noopener">' +
+                '<img class="recent-float-thumb" src="' + item.src + '" alt="">' +
+                '<div class="recent-float-meta">' +
+                    '<div class="recent-float-title">' + item.title + '</div>' +
+                    '<div class="recent-float-sub">' + item.sub + '</div>' +
+                '</div>' +
+            '</a>';
+        }).join('');
+    }
 
     // ── Render ────────────────────────────────────────────────────────
     function renderGrid(results, source) {
@@ -485,6 +549,7 @@
         document.getElementById('lightboxAuthor').textContent  = '📸 ' + author;
         document.getElementById('lightbox').classList.add('open');
         document.body.style.overflow = 'hidden';
+        rememberRecentMedia({ src: src, title: caption, sub: 'Explore' });
     }
 
     function closeLightbox(e) {
@@ -517,6 +582,7 @@
     // ── Init: load immediately on DOMContentLoaded ────────────────────
     document.addEventListener('DOMContentLoaded', function() {
         fetchImages(currentQuery, currentPage);
+        renderRecentMedia();
     });
     </script>
 </body>

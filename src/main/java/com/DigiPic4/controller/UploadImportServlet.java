@@ -1,11 +1,6 @@
 package com.DigiPic4.controller;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.List;
 
@@ -15,6 +10,7 @@ import com.DigiPic4.dao.UserDAO;
 import com.DigiPic4.model.Album;
 import com.DigiPic4.model.Photo;
 import com.DigiPic4.model.User;
+import com.DigiPic4.util.MediaStorageUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -63,22 +59,23 @@ public class UploadImportServlet extends HttpServlet {
         User user = getAuthenticatedUser(req, res);
         if (user == null) return;
 
-        // Resolve upload directory on disk
-        String uploadDirBase = getServletContext().getRealPath("/uploads");
-        Path userUploadPath  = Paths.get(uploadDirBase, String.valueOf(user.getUserId()));
-        if (!Files.exists(userUploadPath)) {
-            Files.createDirectories(userUploadPath);
-        }
-
         // Determine (or auto-create) the target album
         int albumId = resolveAlbumId(req, user);
 
-        AlbumDAO albumDAO = new AlbumDAO();
+        // If album resolution failed, abort with an explanatory message to user
+        if (albumId <= 0) {
+            redirectWithStatus(req, res, null, "Could not resolve or create target album. Please create an album first.");
+            return;
+        }
+
         PhotoDAO photoDAO = new PhotoDAO();
         UserDAO  userDAO  = new UserDAO();
 
         int successCount = 0;
         int failCount    = 0;
+        String importUrl  = req.getParameter("importUrl");
+        String defaultTitle = req.getParameter("defaultTitle");
+        String defaultLocation = req.getParameter("defaultLocation");
 
         Collection<Part> parts;
         try {
@@ -92,44 +89,81 @@ public class UploadImportServlet extends HttpServlet {
         for (Part part : parts) {
             if (!"file".equals(part.getName())) continue;
 
-            String fileName = extractFileName(part);
-            if (fileName == null || fileName.isEmpty()) continue;
+            String fileName = MediaStorageUtil.extractSubmittedFileName(part);
+            if (fileName == null || fileName.isBlank()) {
+                continue;
+            }
 
             if (!isValidFileType(fileName)) {
                 failCount++;
                 continue;
             }
 
-            // Sanitise filename
-            String safeFileName = sanitizeFileName(fileName);
-
             try {
-                // Save to disk
-                Path filePath = userUploadPath.resolve(safeFileName);
-                try (InputStream in = part.getInputStream()) {
-                    Files.copy(in, filePath, StandardCopyOption.REPLACE_EXISTING);
-                }
+                System.out.println("[UploadImport] storing part for user=" + user.getUserId() + " album=" + albumId + " file=" + fileName);
+                String storedPath = MediaStorageUtil.storePart(getServletContext(), part,
+                        user.getUserId(), albumId);
+                System.out.println("[UploadImport] storedPath=" + storedPath);
 
-                // Persist to DB only when we have a valid album
                 if (albumId > 0) {
                     Photo photo = new Photo();
-                    photo.setTitle(fileNameWithoutExtension(safeFileName));
-                    photo.setFilePath(safeFileName);
+                    if (defaultTitle != null && !defaultTitle.isBlank()) {
+                        photo.setTitle(defaultTitle);
+                    } else {
+                        photo.setTitle(fileNameWithoutExtension(fileName));
+                    }
+                    photo.setFilePath(storedPath);
+                    if (defaultLocation != null && !defaultLocation.isBlank()) {
+                        photo.setLocationTag(defaultLocation);
+                    }
                     photo.setAlbumId(albumId);
-                    // EXIF fields left blank — user can fill later
                     int newId = photoDAO.addPhoto(photo);
                     if (newId > 0) {
-                        userDAO.logAction(user.getUserId(), "Uploaded photo: " + safeFileName + " to album #" + albumId);
+                        userDAO.logAction(user.getUserId(), "Uploaded photo: " + fileName + " to album #" + albumId);
                         successCount++;
                     } else {
-                        // File saved but DB insert failed — still count as partial success
                         successCount++;
                     }
                 } else {
-                    // No album — file is on disk but not yet catalogued
                     successCount++;
                 }
 
+                } catch (Exception e) {
+                    System.err.println("[UploadImport] failed storing file " + fileName + " for user=" + user.getUserId() + " album=" + albumId);
+                    e.printStackTrace();
+                    failCount++;
+                }
+        }
+
+        if (importUrl != null && !importUrl.isBlank()) {
+            try {
+                System.out.println("[UploadImport] importing URL for user=" + user.getUserId() + " album=" + albumId + " url=" + importUrl);
+                String storedPath = MediaStorageUtil.storeRemoteUrl(getServletContext(), importUrl.trim(),
+                        user.getUserId(), albumId);
+                System.out.println("[UploadImport] imported url storedPath=" + storedPath);
+
+                if (albumId > 0) {
+                    Photo photo = new Photo();
+                    if (defaultTitle != null && !defaultTitle.isBlank()) {
+                        photo.setTitle(defaultTitle);
+                    } else {
+                        photo.setTitle(titleFromUrl(importUrl.trim()));
+                    }
+                    photo.setFilePath(storedPath);
+                    if (defaultLocation != null && !defaultLocation.isBlank()) {
+                        photo.setLocationTag(defaultLocation);
+                    }
+                    photo.setAlbumId(albumId);
+                    int newId = photoDAO.addPhoto(photo);
+                    if (newId > 0) {
+                        userDAO.logAction(user.getUserId(), "Imported media from URL into album #" + albumId);
+                        successCount++;
+                    } else {
+                        successCount++;
+                    }
+                } else {
+                    successCount++;
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 failCount++;
@@ -201,6 +235,14 @@ public class UploadImportServlet extends HttpServlet {
             if (lower.endsWith(ext)) return true;
         }
         return false;
+    }
+
+    private String titleFromUrl(String sourceUrl) {
+        String raw = MediaStorageUtil.deriveNameFromUrl(sourceUrl);
+        if (raw == null || raw.isBlank()) {
+            return "Imported from URL";
+        }
+        return fileNameWithoutExtension(raw).replace('_', ' ').replace('-', ' ').trim();
     }
 
     /** Replace spaces and non-alphanumeric chars (except dots/dashes/underscores). */
