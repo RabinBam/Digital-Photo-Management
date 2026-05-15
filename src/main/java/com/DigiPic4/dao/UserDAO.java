@@ -15,7 +15,7 @@ public class UserDAO {
     // ─── AUTHENTICATION ───────────────────────────────────────────────────────
 
     public boolean register(User user) {
-        String sql = "INSERT INTO users(first_name, last_name, email, password, role) VALUES (?,?,?,?,?)";
+        String sql = "INSERT INTO users(first_name, last_name, email, password, role, credits) VALUES (?,?,?,?,?,?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trim(user.getFirstName()));
@@ -23,6 +23,7 @@ public class UserDAO {
             ps.setString(3, trim(user.getEmail()));
             ps.setString(4, PasswordUtil.hashPassword(user.getPassword()));
             ps.setString(5, user.getRole() == null ? "user" : user.getRole().trim());
+            ps.setInt(6, 100); // Initial credits
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -31,7 +32,7 @@ public class UserDAO {
     }
 
     public User login(String email, String plainPassword) {
-        String sql = "SELECT user_id, first_name, last_name, email, password, role FROM users WHERE email = ?";
+        String sql = "SELECT user_id, first_name, last_name, email, password, role, credits FROM users WHERE email = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trim(email));
@@ -81,7 +82,7 @@ public class UserDAO {
     // ─── READ ─────────────────────────────────────────────────────────────────
 
     public User findUserByEmail(String email) {
-        String sql = "SELECT user_id, first_name, last_name, email, role FROM users WHERE email = ?";
+        String sql = "SELECT user_id, first_name, last_name, email, role, credits FROM users WHERE email = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trim(email));
@@ -95,7 +96,7 @@ public class UserDAO {
     }
 
     public User findUserById(int userId) {
-        String sql = "SELECT user_id, first_name, last_name, email, role FROM users WHERE user_id = ?";
+        String sql = "SELECT user_id, first_name, last_name, email, role, credits FROM users WHERE user_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
@@ -110,7 +111,7 @@ public class UserDAO {
 
     public List<User> findAllUsers() {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT user_id, first_name, last_name, email, role FROM users ORDER BY user_id DESC";
+        String sql = "SELECT user_id, first_name, last_name, email, role, credits FROM users ORDER BY user_id DESC";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -202,8 +203,21 @@ public class UserDAO {
             ps.setString(2, actionDetails);
             ps.executeUpdate();
         } catch (Exception e) {
+        }
+    }
+
+    public boolean deductCredits(int userId, int amount) {
+        String sql = "UPDATE users SET credits = credits - ? WHERE user_id = ? AND credits >= ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, amount);
+            ps.setInt(2, userId);
+            ps.setInt(3, amount);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     /** All audit logs with joined user email, newest first. */
@@ -252,6 +266,7 @@ public class UserDAO {
         u.setLastName(rs.getString("last_name"));
         u.setEmail(rs.getString("email"));
         u.setRole(rs.getString("role"));
+        u.setCredits(rs.getInt("credits"));
         if (withPassword) u.setPassword(rs.getString("password"));
         return u;
     }

@@ -7,6 +7,15 @@ public class User {
     private String email;
     private String password;
     private String role;
+    private int credits;
+
+    public int getCredits() {
+        return credits;
+    }
+
+    public void setCredits(int credits) {
+        this.credits = credits;
+    }
 
     public int getUserId() {
         return userId;

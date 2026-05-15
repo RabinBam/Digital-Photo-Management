@@ -2,7 +2,6 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.DigiPic4.model.User" %>
 <%@ page import="com.DigiPic4.model.Photo" %>
-<%@ page import="com.DigiPic4.util.MediaStorageUtil" %>
 <%
     User galleryUser = (User) session.getAttribute("user");
     if (galleryUser == null) { response.sendRedirect(request.getContextPath() + "/login"); return; }
@@ -128,9 +127,7 @@
             margin: 10px 0 4px; color: #1e293b;
         }
 
-        .details-panel .location {
-            color: #64748b; font-size: 13px; display: flex; align-items: center; gap: 5px;
-        }
+
 
         .detail-img {
             width: 100%; border-radius: 12px; margin-bottom: 16px;
@@ -170,29 +167,6 @@
         .btn-action:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
         .btn-action.danger:hover { border-color: #ef4444; color: #ef4444; background: #fee2e2; }
 
-        .recent-float {
-            position: fixed; right: 18px; bottom: 18px; width: 250px; z-index: 1200;
-            background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color); border-radius: 16px; box-shadow: 0 16px 38px rgba(15,23,42,0.16);
-            overflow: hidden;
-        }
-        .recent-float-header {
-            padding: 12px 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
-            color: #64748b; border-bottom: 1px solid var(--border-color); display:flex; align-items:center; gap:8px;
-        }
-        .recent-float-list { max-height: 260px; overflow-y: auto; }
-        .recent-float-item {
-            display:flex; gap:10px; padding: 10px 12px; align-items:center; cursor:pointer; text-decoration:none; color: inherit;
-            border-bottom: 1px solid rgba(148,163,184,0.16);
-        }
-        .recent-float-item:last-child { border-bottom:none; }
-        .recent-float-item:hover { background:#eff6ff; }
-        .recent-float-thumb { width: 42px; height: 42px; border-radius: 10px; object-fit:cover; flex-shrink:0; background:#e2e8f0; }
-        .recent-float-meta { min-width:0; }
-        .recent-float-title { font-size: 12px; font-weight: 700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .recent-float-sub { font-size: 10px; color:#94a3b8; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .recent-float-empty { padding: 14px; color:#94a3b8; font-size: 12px; text-align:center; }
-
         /* ── Placeholder msg ──────────────────── */
         .no-select {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -228,6 +202,17 @@
                 <h1>Your Archive</h1>
             </div>
 
+            <!-- Recently Viewed Float Section -->
+            <div id="recentFloatsContainer" style="display:none; margin-bottom: 30px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h5 style="color:#2563eb; font-size:11px; letter-spacing:1px; font-weight:700; text-transform:uppercase; margin:0;">Recently Viewed / Uploaded</h5>
+                    <button onclick="clearRecentFloats()" style="background:none; border:none; color:#94a3b8; font-size:11px; cursor:pointer; font-weight:600;">Clear History</button>
+                </div>
+                <div id="recentFloatsList" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:10px; scrollbar-width: thin;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
             <div class="gallery-layout">
 
                 <%-- Masonry grid --%>
@@ -245,27 +230,23 @@
                     <% } else { %>
                         <div class="masonry" id="masonryGrid">
                             <% for (Photo p : photos) {
-                                String rawPath = p.getFilePath();
+                                String fp = p.getFilePath();
                                 String src;
-                                if (rawPath == null) rawPath = "";
-                                // If it's a full URL or a new-style media path (contains '/'), serve via media or direct
-                                if (MediaStorageUtil.isRemoteUrl(rawPath) || rawPath.contains("/")) {
-                                    src = MediaStorageUtil.resolveBrowserSrc(application, rawPath);
+                                if (fp != null && (fp.startsWith("http://") || fp.startsWith("https://"))) {
+                                    src = fp;
                                 } else {
-                                    // Legacy filename stored in DB — fall back to old uploads location
-                                    src = request.getContextPath() + "/uploads/" + galleryUser.getUserId() + "/" + rawPath;
+                                    src = request.getContextPath() + "/image-serve/" + fp;
                                 }
-                                String title = p.getTitle() != null && !p.getTitle().isEmpty() ? p.getTitle() : rawPath;
+                                String title = p.getTitle() != null && !p.getTitle().isEmpty() ? p.getTitle() : p.getFilePath();
                             %>
                                 <div class="masonry-item"
                                      data-photoid="<%= p.getPhotoId() %>"
-                                     data-title="<%= title %>"
+                                     data-title="<%= title.replace("\"", "&quot;") %>"
                                      data-src="<%= src %>"
                                      data-aperture="<%= p.getAperture() != null ? p.getAperture() : "–" %>"
                                      data-shutter="<%= p.getShutterSpeed() != null ? p.getShutterSpeed() : "–" %>"
                                      data-iso="<%= p.getIso() != null ? p.getIso() : "–" %>"
                                      data-focal="<%= p.getFocalLength() != null ? p.getFocalLength() : "–" %>"
-                                     data-location="<%= p.getLocationTag() != null ? p.getLocationTag() : "" %>"
                                      onclick="selectPhoto(this)">
                                     <img src="<%= src %>" alt="<%= title %>" loading="lazy">
                                     <div class="photo-overlay">
@@ -287,9 +268,7 @@
                     <div id="photoDetail" style="display:none;">
                         <img id="detailImg" src="" alt="Selected" class="detail-img">
                         <h2 id="detailTitle">–</h2>
-                        <p class="location" id="detailLocation" style="display:none;">
-                            <i class="bi bi-geo-alt"></i> <span id="detailLocationText"></span>
-                        </p>
+
                         <div class="tech-specs">
                             <div class="spec-box"><span>Aperture</span><h4 id="detailAperture">–</h4></div>
                             <div class="spec-box"><span>Shutter</span><h4 id="detailShutter">–</h4></div>
@@ -306,51 +285,57 @@
 
             </div>
         </div>
+        
+        <jsp:include page="../components/footer.jsp" />
     </main>
-
-    <div class="recent-float" id="recentFloat">
-        <div class="recent-float-header"><i class="bi bi-clock-history"></i> Recent images</div>
-        <div class="recent-float-list" id="recentFloatList"></div>
-    </div>
 
     <script>
         let selected = null;
-        const RECENT_KEY = 'digipic_recent_media';
 
-        function loadRecentMedia() {
-            try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch (e) { return []; }
-        }
-
-        function saveRecentMedia(items) {
-            localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, 8)));
-            renderRecentMedia();
-        }
-
-        function rememberRecentMedia(item) {
-            if (!item || !item.src) return;
-            const items = loadRecentMedia().filter(function (entry) { return entry.src !== item.src; });
-            items.unshift({ src: item.src, title: item.title || 'Untitled', sub: item.sub || 'Gallery' });
-            saveRecentMedia(items);
-        }
-
-        function renderRecentMedia() {
-            const host = document.getElementById('recentFloatList');
-            if (!host) return;
-            const items = loadRecentMedia();
-            if (!items.length) {
-                host.innerHTML = '<div class="recent-float-empty">Click a photo in Explore or Gallery to pin it here.</div>';
+        function renderRecentFloats() {
+            const recent = JSON.parse(localStorage.getItem('recent_floats') || '[]');
+            const container = document.getElementById('recentFloatsContainer');
+            const list = document.getElementById('recentFloatsList');
+            
+            if (!recent.length) {
+                container.style.display = 'none';
                 return;
             }
-            host.innerHTML = items.map(function (item) {
-                return '<a class="recent-float-item" href="' + item.src + '" target="_blank" rel="noopener">' +
-                    '<img class="recent-float-thumb" src="' + item.src + '" alt="">' +
-                    '<div class="recent-float-meta">' +
-                        '<div class="recent-float-title">' + item.title + '</div>' +
-                        '<div class="recent-float-sub">' + item.sub + '</div>' +
-                    '</div>' +
-                '</a>';
-            }).join('');
+            
+            container.style.display = 'block';
+            list.innerHTML = recent.map(item => `
+                <div style="flex:0 0 120px; cursor:pointer;" onclick="viewRecent('${item.src}')">
+                    <div style="width:120px; height:80px; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0;">
+                        <img src="${item.src}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://via.placeholder.com/120x80?text=Image'">
+                    </div>
+                    <div style="font-size:10px; font-weight:600; color:#1e293b; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</div>
+                    <div style="font-size:9px; color:#94a3b8;">${item.type}</div>
+                </div>
+            `).join('');
         }
+
+        function clearRecentFloats() {
+            if (confirm('Clear your recent viewing history?')) {
+                localStorage.removeItem('recent_floats');
+                renderRecentFloats();
+            }
+        }
+
+        function viewRecent(src) {
+            // Find the item in the masonry grid if it exists, and click it
+            const items = document.querySelectorAll('.masonry-item');
+            for (let item of items) {
+                if (item.getAttribute('data-src') === src) {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    item.click();
+                    return;
+                }
+            }
+            // If not in grid (e.g. from explore), just show in details panel?
+            // For now, just scroll to it if possible.
+        }
+
+        document.addEventListener('DOMContentLoaded', renderRecentFloats);
 
         function selectPhoto(el) {
             if (selected) selected.classList.remove('selected');
@@ -368,18 +353,22 @@
             document.getElementById('detailIso').textContent      = d.iso;
             document.getElementById('detailFocal').textContent    = d.focal;
             document.getElementById('detailDownload').href        = d.src;
-            rememberRecentMedia({ src: d.src, title: d.title, sub: 'Gallery' });
 
-            const locEl = document.getElementById('detailLocation');
-            if (d.location && d.location.trim()) {
-                document.getElementById('detailLocationText').textContent = d.location;
-                locEl.style.display = 'flex';
-            } else {
-                locEl.style.display = 'none';
+
+
+            // Track in Recent Floats
+            var recent = JSON.parse(localStorage.getItem('recent_floats') || '[]');
+            if (!recent.some(function(item) { return item.src === d.src; })) {
+                recent.unshift({
+                    name: d.title,
+                    type: 'Gallery View',
+                    time: 'Just now',
+                    src: d.src,
+                    timestamp: Date.now()
+                });
+                localStorage.setItem('recent_floats', JSON.stringify(recent.slice(0, 20)));
             }
         }
-
-        renderRecentMedia();
     </script>
 </body>
 </html>

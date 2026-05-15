@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(urlPatterns = {"/explore", "/photomap"})
+@WebServlet(urlPatterns = {"/explore"})
 public class ExploreServlet extends HttpServlet {
 
     @Override
@@ -32,9 +32,6 @@ public class ExploreServlet extends HttpServlet {
         if ("/explore".equals(path)) {
             request.setAttribute("page", "explore");
             request.getRequestDispatcher("/WEB-INF/Pages/explore.jsp").forward(request, response);
-        } else if ("/photomap".equals(path)) {
-            request.setAttribute("page", "map");
-            request.getRequestDispatcher("/WEB-INF/Pages/photomap.jsp").forward(request, response);
         } else {
             response.sendRedirect(request.getContextPath() + "/gallery");
         }

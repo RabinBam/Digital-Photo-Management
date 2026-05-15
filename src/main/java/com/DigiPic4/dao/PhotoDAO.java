@@ -14,7 +14,7 @@ public class PhotoDAO {
     public List<Photo> findPhotosByAlbumId(int albumId) {
         List<Photo> photos = new ArrayList<>();
         String sql = "SELECT photo_id, title, file_path, album_id, aperture, shutter_speed, " +
-                     "iso, focal_length, location_tag FROM photos WHERE album_id = ? ORDER BY photo_id DESC";
+                     "iso, focal_length FROM photos WHERE album_id = ? ORDER BY photo_id DESC";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, albumId);
@@ -31,7 +31,7 @@ public class PhotoDAO {
     public List<Photo> findPhotosByUserId(int userId) {
         List<Photo> photos = new ArrayList<>();
         String sql = "SELECT p.photo_id, p.title, p.file_path, p.album_id, p.aperture, " +
-                     "p.shutter_speed, p.iso, p.focal_length, p.location_tag " +
+                     "p.shutter_speed, p.iso, p.focal_length " +
                      "FROM photos p INNER JOIN albums a ON p.album_id = a.album_id " +
                      "WHERE a.user_id = ? ORDER BY p.photo_id DESC";
         try (Connection conn = DBConnection.getConnection();
@@ -48,7 +48,7 @@ public class PhotoDAO {
 
     public Photo findPhotoById(int photoId) {
         String sql = "SELECT photo_id, title, file_path, album_id, aperture, shutter_speed, " +
-                     "iso, focal_length, location_tag FROM photos WHERE photo_id = ?";
+                     "iso, focal_length FROM photos WHERE photo_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, photoId);
@@ -64,7 +64,7 @@ public class PhotoDAO {
     /** Returns generated photo_id or -1. */
     public int addPhoto(Photo photo) {
         String sql = "INSERT INTO photos(title, file_path, album_id, aperture, shutter_speed, " +
-                     "iso, focal_length, location_tag) VALUES (?,?,?,?,?,?,?,?)";
+                     "iso, focal_length) VALUES (?,?,?,?,?,?,?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, photo.getTitle());
@@ -74,7 +74,6 @@ public class PhotoDAO {
             ps.setString(5, photo.getShutterSpeed());
             ps.setString(6, photo.getIso());
             ps.setString(7, photo.getFocalLength());
-            ps.setString(8, photo.getLocationTag());
             if (ps.executeUpdate() > 0) {
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) return keys.getInt(1);
@@ -85,6 +84,8 @@ public class PhotoDAO {
         }
         return -1;
     }
+
+
 
     public boolean deletePhoto(int photoId) {
         String sql = "DELETE FROM photos WHERE photo_id = ?";
@@ -123,7 +124,6 @@ public class PhotoDAO {
         p.setShutterSpeed(rs.getString("shutter_speed"));
         p.setIso(rs.getString("iso"));
         p.setFocalLength(rs.getString("focal_length"));
-        p.setLocationTag(rs.getString("location_tag"));
         return p;
     }
 }

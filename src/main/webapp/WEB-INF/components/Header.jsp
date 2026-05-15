@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="com.DigiPic4.model.User" %>
+<%@ page import="com.DigiPic4.model.User, com.DigiPic4.dao.PhotoDAO, com.DigiPic4.dao.AlbumDAO" %>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
@@ -13,7 +13,8 @@
         if (headerUri.endsWith("/albums"))                                  { headerTitle = "Collections Overview";   headerSubtitle = "CURATION HUB";        activePage = "albums"; }
         else if (headerUri.endsWith("/uploadImport"))                       { headerTitle = "Upload & Import";        headerSubtitle = "MEDIA MANAGEMENT";    activePage = "upload"; }
         else if (headerUri.endsWith("/explore"))                            { headerTitle = "Explore the Ocean";      headerSubtitle = "DISCOVERY FEED";       activePage = "explore"; }
-        else if (headerUri.endsWith("/photomap"))                           { headerTitle = "Photo Map";              headerSubtitle = "GEOLOCATION ARCHIVE";  activePage = "map"; }
+        else if (headerUri.endsWith("/about"))                              { headerTitle = "About Us";               headerSubtitle = "OUR STORY & MISSION";  activePage = "about"; }
+        else if (headerUri.endsWith("/contact"))                            { headerTitle = "Contact Us";             headerSubtitle = "GET IN TOUCH";         activePage = "contact"; }
         else if (headerUri.endsWith("/gallery"))                            { headerTitle = "The Bio-Luminous Gallery"; headerSubtitle = "VAULT: PERSONAL ARCHIVES"; activePage = "gallery"; }
     }
 
@@ -28,6 +29,13 @@
     String hLast    = (hUser != null && hUser.getLastName()  != null) ? hUser.getLastName()  : "";
     String hCtx     = request.getContextPath();
     String isExplore = "explore".equals(activePage) ? "true" : "false";
+
+    int headerPhotoCount = 0;
+    int headerAlbumCount = 0;
+    if (hUser != null) {
+        headerPhotoCount = new PhotoDAO().countPhotosByUser(hUser.getUserId());
+        headerAlbumCount = new AlbumDAO().countAlbumsByUser(hUser.getUserId());
+    }
 %>
 
 <!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
@@ -99,7 +107,7 @@
         <div class="sp-user-meta">
             <div class="sp-user-name"  id="spUserName"><%= hName %></div>
             <div class="sp-user-email"><%= hEmail %></div>
-            <span class="sp-plan-pill"><i class="bi bi-lightning-fill"></i> Free Plan</span>
+            <span class="sp-plan-pill"><i class="bi bi-gem"></i> <%= hUser != null ? hUser.getCredits() : 0 %> Credits</span>
         </div>
         <button class="sp-close-btn" onclick="closeSettings()"><i class="bi bi-x-lg"></i></button>
     </div>
@@ -158,7 +166,6 @@
                 <div class="plan-item-name">Free</div>
                 <div class="plan-item-price">$0<span>/mo</span></div>
                 <ul class="plan-item-features">
-                    <li><i class="bi bi-check2"></i> 5 GB Storage</li>
                     <li><i class="bi bi-check2"></i> 3 Albums</li>
                     <li><i class="bi bi-check2"></i> 50 Photos</li>
                     <li><i class="bi bi-check2"></i> Basic Search</li>
@@ -171,7 +178,6 @@
                 <div class="plan-item-name">Pro</div>
                 <div class="plan-item-price">$9<span>/mo</span></div>
                 <ul class="plan-item-features">
-                    <li><i class="bi bi-check2"></i> 100 GB Storage</li>
                     <li><i class="bi bi-check2"></i> Unlimited Albums</li>
                     <li><i class="bi bi-check2"></i> AI-Powered Search</li>
                     <li><i class="bi bi-check2"></i> Photo Map & Geotag</li>
@@ -184,7 +190,6 @@
                 <div class="plan-item-name">Enterprise</div>
                 <div class="plan-item-price">$29<span>/mo</span></div>
                 <ul class="plan-item-features">
-                    <li><i class="bi bi-check2"></i> 2 TB Storage</li>
                     <li><i class="bi bi-check2"></i> Team Collaboration</li>
                     <li><i class="bi bi-check2"></i> Priority Support</li>
                     <li><i class="bi bi-check2"></i> Custom Branding</li>
@@ -200,19 +205,16 @@
         <div class="current-plan-strip"><i class="bi bi-lightning-fill"></i><span>Free Plan — Renews Never</span></div>
         <div class="usage-list">
             <div class="usage-row">
-                <div class="usage-row-label"><i class="bi bi-hdd"></i> Storage</div>
-                <div class="usage-row-bar"><div class="ubfill" style="width:34%;"></div></div>
-                <div class="usage-row-val">1.7 GB <span>/ 5 GB</span></div>
-            </div>
-            <div class="usage-row">
                 <div class="usage-row-label"><i class="bi bi-folder2"></i> Albums</div>
-                <div class="usage-row-bar"><div class="ubfill" style="width:33%;"></div></div>
-                <div class="usage-row-val">1 <span>/ 3</span></div>
+                <% int albumPct = Math.min(100, headerAlbumCount * 100 / 3); %>
+                <div class="usage-row-bar"><div class="ubfill <%= headerAlbumCount >= 3 ? "orange" : "" %>" style="width:<%= albumPct %>%;"></div></div>
+                <div class="usage-row-val"><%= headerAlbumCount %> <span>/ 3</span></div>
             </div>
             <div class="usage-row">
                 <div class="usage-row-label"><i class="bi bi-image"></i> Photos</div>
-                <div class="usage-row-bar"><div class="ubfill orange" style="width:78%;"></div></div>
-                <div class="usage-row-val">39 <span>/ 50</span></div>
+                <% int photoPct = Math.min(100, headerPhotoCount * 100 / 50); %>
+                <div class="usage-row-bar"><div class="ubfill <%= headerPhotoCount >= 50 ? "orange" : "" %>" style="width:<%= photoPct %>%;"></div></div>
+                <div class="usage-row-val"><%= headerPhotoCount %> <span>/ 50</span></div>
             </div>
             <div class="usage-row">
                 <div class="usage-row-label"><i class="bi bi-compass"></i> API Calls</div>
@@ -220,9 +222,9 @@
                 <div class="usage-row-val">120 <span>/ 1,000</span></div>
             </div>
             <div class="usage-row">
-                <div class="usage-row-label"><i class="bi bi-geo-alt"></i> Map Pins</div>
-                <div class="usage-row-bar"><div class="ubfill green" style="width:20%;"></div></div>
-                <div class="usage-row-val">4 <span>/ 20</span></div>
+                <div class="usage-row-label"><i class="bi bi-gem"></i> Plan Credits</div>
+                <div class="usage-row-bar"><div class="ubfill <%= (hUser != null && hUser.getCredits() < 20) ? "orange" : "" %>" style="width:<%= hUser != null ? Math.min(100, (hUser.getCredits() / 5)) : 0 %>%;"></div></div>
+                <div class="usage-row-val"><%= hUser != null ? hUser.getCredits() : 0 %> <span>/ 500</span></div>
             </div>
         </div>
         <a href="<%= hCtx %>/profile" class="sp-link-btn"><i class="bi bi-person-badge"></i> Full Profile & Audit Log</a>
@@ -243,13 +245,6 @@
             <div class="notif-time">2 minutes ago</div>
         </div>
     </div>
-    <div class="notif-entry unread">
-        <div class="notif-ico warn"><i class="bi bi-exclamation-triangle-fill"></i></div>
-        <div class="notif-txt">
-            <div class="notif-msg">You've reached 80% of your photo storage limit</div>
-            <div class="notif-time">1 hour ago</div>
-        </div>
-    </div>
     <div class="notif-entry">
         <div class="notif-ico info"><i class="bi bi-stars"></i></div>
         <div class="notif-txt">
@@ -263,14 +258,6 @@
 <!-- ══════════════════════ STYLES ══════════════════════ -->
 <style>
 /* ── Header Shell ─────────────────────────────────────── */
-.header {
-    position: sticky; top: 0; z-index: 200;
-    width: 100%; padding: 14px 28px !important;
-    background: var(--bg-surface);
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    display: flex; justify-content: space-between; align-items: center; gap: 18px;
-}
 .header-right { display: flex; align-items: center; gap: 14px; }
 
 /* ── Search ───────────────────────────────────────────── */
@@ -545,7 +532,6 @@
 .notif-clear-btn:hover { background: #eff6ff; }
 
 @media (max-width: 768px) {
-    .header { padding: 10px 14px !important; flex-wrap: wrap; }
     .search-bar { width: 180px; }
     .settings-panel { width: 100%; right: -100%; }
 }

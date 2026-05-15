@@ -13,13 +13,14 @@ public class AlbumDAO {
 
     public List<Album> findAlbumsByUserId(int userId) {
         List<Album> albums = new ArrayList<>();
-        String sql = "SELECT album_id, album_name, description, cover_image_url, user_id " +
-                     "FROM albums WHERE user_id = ? ORDER BY album_id DESC";
+        String sql = "SELECT a.album_id, a.album_name, a.description, a.cover_image_url, a.user_id, COUNT(p.photo_id) as photo_count " +
+                     "FROM albums a LEFT JOIN photos p ON a.album_id = p.album_id " +
+                     "WHERE a.user_id = ? GROUP BY a.album_id ORDER BY a.album_id DESC";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) albums.add(mapAlbum(rs));
+                while (rs.next()) albums.add(mapAlbum(rs, true));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -123,12 +124,19 @@ public class AlbumDAO {
     }
 
     private Album mapAlbum(ResultSet rs) throws Exception {
+        return mapAlbum(rs, false);
+    }
+
+    private Album mapAlbum(ResultSet rs, boolean withPhotoCount) throws Exception {
         Album a = new Album();
         a.setAlbumId(rs.getInt("album_id"));
         a.setAlbumName(rs.getString("album_name"));
         a.setDescription(rs.getString("description"));
         a.setCoverImageUrl(rs.getString("cover_image_url"));
         a.setUserId(rs.getInt("user_id"));
+        if (withPhotoCount) {
+            a.setPhotoCount(rs.getInt("photo_count"));
+        }
         return a;
     }
 }

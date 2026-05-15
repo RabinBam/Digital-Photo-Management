@@ -16,7 +16,7 @@ import java.util.List;
 public class DBConnection {
 
     // ── Configuration ─────────────────────────────────────────────────────────
-    private static final String URL      = "jdbc:mysql://localhost:3306/digipic_db"
+    private static final String URL = "jdbc:mysql://localhost:3306/digipic_db"
             + "?useSSL=false&allowPublicKeyRetrieval=true"
             + "&serverTimezone=UTC"
             + "&autoReconnect=true"
@@ -24,16 +24,16 @@ public class DBConnection {
             + "&useServerPrepStmts=true"
             + "&prepStmtCacheSize=250"
             + "&prepStmtCacheSqlLimit=2048";
-    private static final String USER     = "root";
+    private static final String USER = "root";
     private static final String PASSWORD = "";
 
     // Pool settings
-    private static final int POOL_SIZE   = 10;   // max concurrent connections
-    private static final int TIMEOUT_MS  = 5000; // wait up to 5 s for a free slot
+    private static final int POOL_SIZE = 10; // max concurrent connections
+    private static final int TIMEOUT_MS = 5000; // wait up to 5 s for a free slot
 
     // ── Pool state ─────────────────────────────────────────────────────────────
-    private static final List<Connection> pool      = new ArrayList<>();
-    private static final List<Connection> usedList  = new ArrayList<>();
+    private static final List<Connection> pool = new ArrayList<>();
+    private static final List<Connection> usedList = new ArrayList<>();
     private static boolean initialized = false;
 
     // ── Init ───────────────────────────────────────────────────────────────────
@@ -76,9 +76,14 @@ public class DBConnection {
         while (pool.isEmpty()) {
             long remaining = deadline - System.currentTimeMillis();
             if (remaining <= 0) {
-                throw new RuntimeException("Connection pool exhausted – no free connection after " + TIMEOUT_MS + " ms.");
+                throw new RuntimeException(
+                        "Connection pool exhausted – no free connection after " + TIMEOUT_MS + " ms.");
             }
-            try { DBConnection.class.wait(remaining); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
+            try {
+                DBConnection.class.wait(remaining);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
         }
 
         Connection conn = pool.remove(pool.size() - 1);
@@ -89,7 +94,9 @@ public class DBConnection {
                 conn = createFreshConnection();
             }
         } catch (SQLException e) {
-            try { conn = createFreshConnection(); } catch (SQLException ex) {
+            try {
+                conn = createFreshConnection();
+            } catch (SQLException ex) {
                 throw new RuntimeException("Cannot create replacement connection.", ex);
             }
         }
@@ -113,22 +120,21 @@ public class DBConnection {
      */
     private static Connection wrapConnection(final Connection real) {
         return (Connection) java.lang.reflect.Proxy.newProxyInstance(
-            Connection.class.getClassLoader(),
-            new Class[]{ Connection.class },
-            (proxy, method, args) -> {
-                if ("close".equals(method.getName())) {
-                    returnConnection(real);
-                    return null;
-                }
-                if ("isClosed".equals(method.getName())) {
-                    return real.isClosed();
-                }
-                try {
-                    return method.invoke(real, args);
-                } catch (java.lang.reflect.InvocationTargetException e) {
-                    throw e.getCause();
-                }
-            }
-        );
+                Connection.class.getClassLoader(),
+                new Class[] { Connection.class },
+                (proxy, method, args) -> {
+                    if ("close".equals(method.getName())) {
+                        returnConnection(real);
+                        return null;
+                    }
+                    if ("isClosed".equals(method.getName())) {
+                        return real.isClosed();
+                    }
+                    try {
+                        return method.invoke(real, args);
+                    } catch (java.lang.reflect.InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                });
     }
 }

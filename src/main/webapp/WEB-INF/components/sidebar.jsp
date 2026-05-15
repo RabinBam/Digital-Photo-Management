@@ -13,8 +13,10 @@
             else if (uri.endsWith("/albums"))        currentPage = "albums";
             else if (uri.endsWith("/uploadImport"))  currentPage = "uploadImport";
             else if (uri.endsWith("/profile"))       currentPage = "profile";
+            else if (uri.endsWith("/about"))         currentPage = "about";
+            else if (uri.endsWith("/contact"))       currentPage = "contact";
             else if (uri.endsWith("/explore"))       currentPage = "explore";
-            else if (uri.endsWith("/photomap"))      currentPage = "map";
+            else if (uri.endsWith("/usage"))         currentPage = "usage";
             else                                     currentPage = "";
         } else { currentPage = ""; }
     }
@@ -60,16 +62,29 @@
                 <i class="bi bi-compass"></i> Explore the Ocean
             </a>
         </li>
+
         <li>
-            <a href="${pageContext.request.contextPath}/photomap"
-               class="<%= "map".equals(currentPage) ? "active" : "" %>">
-                <i class="bi bi-geo-alt"></i> Photo Map
+            <a href="${pageContext.request.contextPath}/usage"
+               class="<%= "usage".equals(currentPage) ? "active" : "" %>">
+                <i class="bi bi-graph-up"></i> Usage Analytics
             </a>
         </li>
         <li>
             <a href="${pageContext.request.contextPath}/profile"
                class="<%= "profile".equals(currentPage) ? "active" : "" %>">
                 <i class="bi bi-person-circle"></i> My Profile
+            </a>
+        </li>
+        <li>
+            <a href="${pageContext.request.contextPath}/about"
+               class="<%= "about".equals(currentPage) ? "active" : "" %>">
+                <i class="bi bi-info-circle"></i> About Us
+            </a>
+        </li>
+        <li>
+            <a href="${pageContext.request.contextPath}/contact"
+               class="<%= "contact".equals(currentPage) ? "active" : "" %>">
+                <i class="bi bi-envelope"></i> Contact Us
             </a>
         </li>
         <li>

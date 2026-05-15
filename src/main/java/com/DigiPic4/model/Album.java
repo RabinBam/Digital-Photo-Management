@@ -7,6 +7,7 @@ public class Album {
     private String albumName;
     private String description;
     private String coverImageUrl;
+    private int photoCount;
 
     public int getAlbumId()                       { return albumId; }
     public void setAlbumId(int albumId)           { this.albumId = albumId; }
@@ -22,6 +23,9 @@ public class Album {
 
     public String getCoverImageUrl()              { return coverImageUrl; }
     public void setCoverImageUrl(String url)      { this.coverImageUrl = url; }
+
+    public int getPhotoCount()                    { return photoCount; }
+    public void setPhotoCount(int photoCount)     { this.photoCount = photoCount; }
 
 
 }

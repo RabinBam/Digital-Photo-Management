@@ -127,9 +127,7 @@
             margin: 10px 0 4px; color: #1e293b;
         }
 
-        .details-panel .location {
-            color: #64748b; font-size: 13px; display: flex; align-items: center; gap: 5px;
-        }
+
 
         .detail-img {
             width: 100%; border-radius: 12px; margin-bottom: 16px;
@@ -204,6 +202,17 @@
                 <h1>Your Archive</h1>
             </div>
 
+            <!-- Recently Viewed Float Section -->
+            <div id="recentFloatsContainer" style="display:none; margin-bottom: 30px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h5 style="color:#2563eb; font-size:11px; letter-spacing:1px; font-weight:700; text-transform:uppercase; margin:0;">Recently Viewed / Uploaded</h5>
+                    <button onclick="clearRecentFloats()" style="background:none; border:none; color:#94a3b8; font-size:11px; cursor:pointer; font-weight:600;">Clear History</button>
+                </div>
+                <div id="recentFloatsList" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:10px; scrollbar-width: thin;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
             <div class="gallery-layout">
 
                 <%-- Masonry grid --%>
@@ -221,18 +230,23 @@
                     <% } else { %>
                         <div class="masonry" id="masonryGrid">
                             <% for (Photo p : photos) {
-                                String src = request.getContextPath() + "/uploads/" + galleryUser.getUserId() + "/" + p.getFilePath();
+                                String fp = p.getFilePath();
+                                String src;
+                                if (fp != null && (fp.startsWith("http://") || fp.startsWith("https://"))) {
+                                    src = fp;
+                                } else {
+                                    src = request.getContextPath() + "/image-serve/" + fp;
+                                }
                                 String title = p.getTitle() != null && !p.getTitle().isEmpty() ? p.getTitle() : p.getFilePath();
                             %>
                                 <div class="masonry-item"
                                      data-photoid="<%= p.getPhotoId() %>"
-                                     data-title="<%= title %>"
+                                     data-title="<%= title.replace("\"", "&quot;") %>"
                                      data-src="<%= src %>"
                                      data-aperture="<%= p.getAperture() != null ? p.getAperture() : "–" %>"
                                      data-shutter="<%= p.getShutterSpeed() != null ? p.getShutterSpeed() : "–" %>"
                                      data-iso="<%= p.getIso() != null ? p.getIso() : "–" %>"
                                      data-focal="<%= p.getFocalLength() != null ? p.getFocalLength() : "–" %>"
-                                     data-location="<%= p.getLocationTag() != null ? p.getLocationTag() : "" %>"
                                      onclick="selectPhoto(this)">
                                     <img src="<%= src %>" alt="<%= title %>" loading="lazy">
                                     <div class="photo-overlay">
@@ -254,9 +268,7 @@
                     <div id="photoDetail" style="display:none;">
                         <img id="detailImg" src="" alt="Selected" class="detail-img">
                         <h2 id="detailTitle">–</h2>
-                        <p class="location" id="detailLocation" style="display:none;">
-                            <i class="bi bi-geo-alt"></i> <span id="detailLocationText"></span>
-                        </p>
+
                         <div class="tech-specs">
                             <div class="spec-box"><span>Aperture</span><h4 id="detailAperture">–</h4></div>
                             <div class="spec-box"><span>Shutter</span><h4 id="detailShutter">–</h4></div>
@@ -273,10 +285,57 @@
 
             </div>
         </div>
+        
+        <jsp:include page="../components/footer.jsp" />
     </main>
 
     <script>
         let selected = null;
+
+        function renderRecentFloats() {
+            const recent = JSON.parse(localStorage.getItem('recent_floats') || '[]');
+            const container = document.getElementById('recentFloatsContainer');
+            const list = document.getElementById('recentFloatsList');
+            
+            if (!recent.length) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            list.innerHTML = recent.map(item => `
+                <div style="flex:0 0 120px; cursor:pointer;" onclick="viewRecent('${item.src}')">
+                    <div style="width:120px; height:80px; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0;">
+                        <img src="${item.src}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://via.placeholder.com/120x80?text=Image'">
+                    </div>
+                    <div style="font-size:10px; font-weight:600; color:#1e293b; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</div>
+                    <div style="font-size:9px; color:#94a3b8;">${item.type}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearRecentFloats() {
+            if (confirm('Clear your recent viewing history?')) {
+                localStorage.removeItem('recent_floats');
+                renderRecentFloats();
+            }
+        }
+
+        function viewRecent(src) {
+            // Find the item in the masonry grid if it exists, and click it
+            const items = document.querySelectorAll('.masonry-item');
+            for (let item of items) {
+                if (item.getAttribute('data-src') === src) {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    item.click();
+                    return;
+                }
+            }
+            // If not in grid (e.g. from explore), just show in details panel?
+            // For now, just scroll to it if possible.
+        }
+
+        document.addEventListener('DOMContentLoaded', renderRecentFloats);
 
         function selectPhoto(el) {
             if (selected) selected.classList.remove('selected');
@@ -295,12 +354,19 @@
             document.getElementById('detailFocal').textContent    = d.focal;
             document.getElementById('detailDownload').href        = d.src;
 
-            const locEl = document.getElementById('detailLocation');
-            if (d.location && d.location.trim()) {
-                document.getElementById('detailLocationText').textContent = d.location;
-                locEl.style.display = 'flex';
-            } else {
-                locEl.style.display = 'none';
+
+
+            // Track in Recent Floats
+            var recent = JSON.parse(localStorage.getItem('recent_floats') || '[]');
+            if (!recent.some(function(item) { return item.src === d.src; })) {
+                recent.unshift({
+                    name: d.title,
+                    type: 'Gallery View',
+                    time: 'Just now',
+                    src: d.src,
+                    timestamp: Date.now()
+                });
+                localStorage.setItem('recent_floats', JSON.stringify(recent.slice(0, 20)));
             }
         }
     </script>

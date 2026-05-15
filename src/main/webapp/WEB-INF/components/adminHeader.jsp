@@ -80,16 +80,6 @@
     }
 
     /* ── Header Base ─────────────────────────────────────── */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 28px 48px;
-        background: var(--bg-surface);
-        border-bottom: 1px solid var(--border-color);
-        gap: 32px;
-    }
-
     .header-left {
         flex: 1;
     }
@@ -324,11 +314,6 @@
 
     /* ── Responsive ─────────────────────────────────────── */
     @media (max-width: 1200px) {
-        .header {
-            padding: 20px 32px;
-            gap: 20px;
-        }
-
         .page-title {
             font-size: 26px;
         }
@@ -339,13 +324,6 @@
     }
 
     @media (max-width: 768px) {
-        .header {
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 16px 20px;
-            gap: 16px;
-        }
-
         .header-right {
             width: 100%;
             order: 3;

@@ -15,6 +15,8 @@
             else if (uri.endsWith("/uploadImport")) currentPage = "uploadImport";
             else if (uri.endsWith("/audit-log"))    currentPage = "audit-log";
             else if (uri.endsWith("/profile"))      currentPage = "profile";
+            else if (uri.endsWith("/explore"))      currentPage = "explore";
+            else if (uri.endsWith("/usage"))        currentPage = "usage";
             else                                    currentPage = "";
         } else { currentPage = ""; }
     }
@@ -52,6 +54,19 @@
             <a href="${pageContext.request.contextPath}/uploadImport"
                class="<%= "uploadImport".equals(currentPage) ? "active" : "" %>">
                 <i class="bi bi-cloud-upload"></i> Upload &amp; Import
+            </a>
+        </li>
+        <li>
+            <a href="${pageContext.request.contextPath}/explore"
+               class="<%= "explore".equals(currentPage) ? "active" : "" %>">
+                <i class="bi bi-compass"></i> Explore the Ocean
+            </a>
+        </li>
+
+        <li>
+            <a href="${pageContext.request.contextPath}/usage"
+               class="<%= "usage".equals(currentPage) ? "active" : "" %>">
+                <i class="bi bi-graph-up"></i> Usage Analytics
             </a>
         </li>
 

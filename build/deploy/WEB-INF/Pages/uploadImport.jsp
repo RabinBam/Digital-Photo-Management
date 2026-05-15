@@ -300,16 +300,53 @@
                         </div>
 
                         <%-- Album selector --%>
-                        <div class="album-selector-wrap">
-                            <label for="albumId">Save to Album</label>
-                            <select id="albumId" name="albumId" class="album-select">
-                                <option value="">— Auto-create "My Uploads" —</option>
-                                <% if (uploadAlbums != null) {
-                                    for (Album al : uploadAlbums) { %>
-                                        <option value="<%= al.getAlbumId() %>"><%= al.getAlbumName() %></option>
-                                <%  }
-                                } %>
-                            </select>
+                        <div class="album-selector-wrap" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label for="albumId">Save to Existing Album</label>
+                                <select id="albumId" name="albumId" class="album-select">
+                                    <option value="">— Create New / Use Default —</option>
+                                    <% if (uploadAlbums != null) {
+                                        for (Album al : uploadAlbums) { %>
+                                            <option value="<%= al.getAlbumId() %>"><%= al.getAlbumName() %> (<%= al.getPhotoCount() %> photos)</option>
+                                    <%  }
+                                    } %>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="newAlbumName">Or Create New Album</label>
+                                <input type="text" id="newAlbumName" name="newAlbumName" class="album-select" 
+                                       placeholder="Enter name (e.g. Vacation 2024)"
+                                       <%= (uploadAlbums != null && uploadAlbums.size() >= 3) ? "disabled" : "" %>>
+                                <% if (uploadAlbums != null && uploadAlbums.size() >= 3) { %>
+                                    <div style="color: #ef4444; font-size: 11px; font-weight: 700; margin-top: 4px;">
+                                        <i class="bi bi-exclamation-circle"></i> Album limit reached (3/3)
+                                    </div>
+                                <% } else if (uploadAlbums != null) { %>
+                                    <div style="color: #64748b; font-size: 11px; margin-top: 4px;">
+                                        Albums: <%= uploadAlbums.size() %>/3
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <%-- Metadata fields --%>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px; border-top:1px solid #e2e8f0; padding-top:20px;">
+                            <div class="mfield" style="margin:0;">
+                                <label><i class="bi bi-camera"></i> Aperture</label>
+                                <input type="text" name="aperture" placeholder="e.g. f/1.8">
+                            </div>
+                            <div class="mfield" style="margin:0;">
+                                <label><i class="bi bi-stopwatch"></i> Shutter Speed</label>
+                                <input type="text" name="shutterSpeed" placeholder="e.g. 1/1000">
+                            </div>
+                            <div class="mfield" style="margin:0;">
+                                <label><i class="bi bi-film"></i> ISO</label>
+                                <input type="text" name="iso" placeholder="e.g. 100">
+                            </div>
+                            <div class="mfield" style="margin:0;">
+                                <label><i class="bi bi-arrows-expand"></i> Focal Length</label>
+                                <input type="text" name="focalLength" placeholder="e.g. 35mm">
+                            </div>
                         </div>
 
                         <%-- Selected files list --%>
@@ -350,6 +387,18 @@
                     <section class="panel">
                         <h2>Import Sources</h2>
                         <p class="panel-subtitle">Connect cloud services or paste a URL to pull in media.</p>
+                        
+                        <div id="urlImportSection" style="display:none; margin-bottom: 20px; padding: 15px; background: #eff6ff; border-radius: 12px; border: 1px solid #dbeafe;">
+                            <h4 style="font-size:13px; font-weight:700; margin-bottom:10px;">Import from URL</h4>
+                            <form action="<%= request.getContextPath() %>/uploadImport" method="post" style="display:flex; gap:10px;">
+                                <input type="url" name="importUrl" placeholder="https://example.com/image.jpg" required 
+                                       style="flex:1; padding:8px 12px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px;">
+                                <input type="hidden" name="albumId" id="urlAlbumId">
+                                <button type="submit" class="btn-upload" style="padding:8px 16px; font-size:12px;">Import</button>
+                                <button type="button" class="btn-clear" onclick="toggleUrlImport()" style="padding:8px 12px; font-size:12px;">Cancel</button>
+                            </form>
+                        </div>
+
                         <div class="import-grid">
                             <div class="import-card" onclick="importAlert('Cloud Drive')">
                                 <i class="bi bi-cloud-fill"></i>
@@ -366,7 +415,7 @@
                                 <h4>Mobile Sync</h4>
                                 <p>iOS &amp; Android photo rolls</p>
                             </div>
-                            <div class="import-card" onclick="importFromUrl()">
+                            <div class="import-card" onclick="toggleUrlImport()">
                                 <i class="bi bi-link-45deg"></i>
                                 <h4>From URL</h4>
                                 <p>Paste any direct file link</p>
@@ -380,35 +429,23 @@
                     <section class="panel">
                         <h2>Recent Transfers</h2>
                         <p class="panel-subtitle">Latest upload activity.</p>
-                        <div class="transfer-item">
-                            <div class="transfer-ico done"><i class="bi bi-check2"></i></div>
-                            <div style="flex:1;min-width:0;">
-                                <div class="transfer-name">Vacation_Sea_View_01.jpg</div>
-                                <div class="transfer-meta">Device upload · 24 min ago</div>
+                        <div id="recentActivityList">
+                            <!-- Populated by JS from localStorage -->
+                            <div class="transfer-item">
+                                <div class="transfer-ico done"><i class="bi bi-check2"></i></div>
+                                <div style="flex:1;min-width:0;">
+                                    <div class="transfer-name">No recent activity</div>
+                                    <div class="transfer-meta">Upload or import images to see them here</div>
+                                </div>
                             </div>
-                            <span class="transfer-pct">100%</span>
-                        </div>
-                        <div class="transfer-item">
-                            <div class="transfer-ico done"><i class="bi bi-check2"></i></div>
-                            <div style="flex:1;min-width:0;">
-                                <div class="transfer-name">Family_Backup_2024.zip</div>
-                                <div class="transfer-meta">Cloud Drive sync · 3 hours ago</div>
-                            </div>
-                            <span class="transfer-pct">100%</span>
-                        </div>
-                        <div class="transfer-item">
-                            <div class="transfer-ico pend"><i class="bi bi-hourglass-split"></i></div>
-                            <div style="flex:1;min-width:0;">
-                                <div class="transfer-name">ShortClip.mp4</div>
-                                <div class="transfer-meta">URL fetch in progress</div>
-                            </div>
-                            <span class="transfer-pct">41%</span>
                         </div>
                     </section>
 
                 </div>
             </div>
         </div>
+        
+        <jsp:include page="../components/footer.jsp" />
     </main>
 
     <script>
@@ -541,6 +578,18 @@
             uploadBtn.disabled = true;
             uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading…';
 
+            // Update localStorage for recent transfers before submission
+            var recent = JSON.parse(localStorage.getItem('recent_floats') || '[]');
+            buffered.forEach(function(f) {
+                recent.unshift({
+                    name: f.name,
+                    type: 'Device upload',
+                    time: 'Just now',
+                    timestamp: Date.now()
+                });
+            });
+            localStorage.setItem('recent_floats', JSON.stringify(recent.slice(0, 20)));
+
             var p = 0;
             var iv = setInterval(function() {
                 p = Math.min(p + Math.random() * 12, 88);
@@ -564,12 +613,48 @@
         alert(source + ' integration coming soon!\n\nUse the Upload From Device panel to upload files from your computer.');
     }
 
-    function importFromUrl() {
-        var url = prompt('Paste the direct URL of the media file to import:');
-        if (url && url.trim()) {
-            alert('URL import queued:\n' + url.trim() + '\n\n(This will be wired to the backend in a future release.)');
-        }
+    function toggleUrlImport() {
+        var sec = document.getElementById('urlImportSection');
+        var albumId = document.getElementById('albumId').value;
+        document.getElementById('urlAlbumId').value = albumId;
+        sec.style.display = (sec.style.display === 'none') ? 'block' : 'none';
+        if (sec.style.display === 'block') sec.scrollIntoView({ behavior: 'smooth' });
     }
+
+    function renderRecentActivity() {
+        var recent = JSON.parse(localStorage.getItem('recent_floats') || '[]');
+        var list = document.getElementById('recentActivityList');
+        if (!recent.length) return;
+
+        list.innerHTML = recent.slice(0, 5).map(function(item) {
+            return '<div class="transfer-item">' +
+                '<div class="transfer-ico done"><i class="bi bi-check2"></i></div>' +
+                '<div style="flex:1;min-width:0;">' +
+                    '<div class="transfer-name">' + item.name + '</div>' +
+                    '<div class="transfer-meta">' + item.type + ' · ' + item.time + '</div>' +
+                '</div>' +
+                '<span class="transfer-pct">100%</span>' +
+            '</div>';
+        }).join('');
+    }
+
+    // Call on load
+    renderRecentActivity();
+
+
+
+    // Track URL imports too
+    document.querySelector('#urlImportSection form').addEventListener('submit', function() {
+        var urlInput = this.querySelector('input[name="importUrl"]');
+        var recent = JSON.parse(localStorage.getItem('recent_floats') || '[]');
+        recent.unshift({
+            name: urlInput.value.split('/').pop() || 'Imported URL',
+            type: 'URL Import',
+            time: 'Just now',
+            timestamp: Date.now()
+        });
+        localStorage.setItem('recent_floats', JSON.stringify(recent.slice(0, 20)));
+    });
     </script>
 </body>
 </html>

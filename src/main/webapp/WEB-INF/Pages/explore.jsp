@@ -35,7 +35,6 @@
 
         .main-content {
             flex-grow: 1;
-            padding: 40px;
             overflow-y: auto;
             background-color: #f8fafb;
             display: flex;
@@ -157,29 +156,6 @@
         }
         .api-badge.live { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
         .api-badge.preloaded { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
-
-        .recent-float {
-            position: fixed; right: 18px; bottom: 18px; width: 250px; z-index: 1200;
-            background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color); border-radius: 16px; box-shadow: 0 16px 38px rgba(15,23,42,0.16);
-            overflow: hidden;
-        }
-        .recent-float-header {
-            padding: 12px 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
-            color: #64748b; border-bottom: 1px solid var(--border-color); display:flex; align-items:center; gap:8px;
-        }
-        .recent-float-list { max-height: 260px; overflow-y: auto; }
-        .recent-float-item {
-            display:flex; gap:10px; padding: 10px 12px; align-items:center; cursor:pointer; text-decoration:none; color: inherit;
-            border-bottom: 1px solid rgba(148,163,184,0.16);
-        }
-        .recent-float-item:last-child { border-bottom:none; }
-        .recent-float-item:hover { background:#eff6ff; }
-        .recent-float-thumb { width: 42px; height: 42px; border-radius: 10px; object-fit:cover; flex-shrink:0; background:#e2e8f0; }
-        .recent-float-meta { min-width:0; }
-        .recent-float-title { font-size: 12px; font-weight: 700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .recent-float-sub { font-size: 10px; color:#94a3b8; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .recent-float-empty { padding: 14px; color:#94a3b8; font-size: 12px; text-align:center; }
     </style>
 </head>
 <body>
@@ -259,6 +235,7 @@
                 </button>
             </div>
         </div>
+        <jsp:include page="../components/footer.jsp" />
     </main>
 
     <!-- Lightbox -->
@@ -269,11 +246,6 @@
             <div class="lightbox-caption" id="lightboxCaption"></div>
             <div class="lightbox-author" id="lightboxAuthor"></div>
         </div>
-    </div>
-
-    <div class="recent-float" id="recentFloat">
-        <div class="recent-float-header"><i class="bi bi-clock-history"></i> Recent images</div>
-        <div class="recent-float-list" id="recentFloatList"></div>
     </div>
 
     <script>
@@ -353,45 +325,9 @@
     let currentPage   = 1;
     let totalPages    = 1;
     let isUsingAPI    = false;
-    const RECENT_KEY  = 'digipic_recent_media';
-
-    function loadRecentMedia() {
-        try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch (e) { return []; }
-    }
-
-    function saveRecentMedia(items) {
-        localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, 8)));
-        renderRecentMedia();
-    }
-
-    function rememberRecentMedia(item) {
-        if (!item || !item.src) return;
-        const items = loadRecentMedia().filter(function (entry) { return entry.src !== item.src; });
-        items.unshift({ src: item.src, title: item.title || 'Untitled', sub: item.sub || 'Explore' });
-        saveRecentMedia(items);
-    }
-
-    function renderRecentMedia() {
-        const host = document.getElementById('recentFloatList');
-        if (!host) return;
-        const items = loadRecentMedia();
-        if (!items.length) {
-            host.innerHTML = '<div class="recent-float-empty">Click a photo in Explore or Gallery to pin it here.</div>';
-            return;
-        }
-        host.innerHTML = items.map(function (item) {
-            return '<a class="recent-float-item" href="' + item.src + '" target="_blank" rel="noopener">' +
-                '<img class="recent-float-thumb" src="' + item.src + '" alt="">' +
-                '<div class="recent-float-meta">' +
-                    '<div class="recent-float-title">' + item.title + '</div>' +
-                    '<div class="recent-float-sub">' + item.sub + '</div>' +
-                '</div>' +
-            '</a>';
-        }).join('');
-    }
 
     // ── Render ────────────────────────────────────────────────────────
-    function renderGrid(results, source) {
+    function renderGrid(results, source, totalFromApi) {
         const grid  = document.getElementById('exploreGrid');
         const empty = document.getElementById('exploreEmpty');
         const skel  = document.getElementById('skeletonLoader');
@@ -428,7 +364,7 @@
         });
 
         grid.style.display = '';
-        document.getElementById('totalCount').textContent = results.length + (source === 'api' ? '+' : '');
+        document.getElementById('totalCount').textContent = (totalFromApi || results.length);
         document.getElementById('explorePagination').style.display = 'flex';
         document.getElementById('pageIndicator').textContent = 'Page ' + currentPage;
         document.getElementById('prevBtn').disabled = currentPage <= 1;
@@ -441,7 +377,7 @@
         if (source === 'api') {
             el.innerHTML = '<i class="bi bi-circle-fill" style="color:#16a34a; font-size:8px;"></i> Live API via server';
         } else {
-            el.innerHTML = '<i class="bi bi-circle-fill" style="color:#2563eb; font-size:8px;"></i> Curated Library';
+            el.innerHTML = '<i class="bi bi-circle-fill" style="color:#2563eb; font-size:8px;"></i> Curated Library (Preloaded)';
         }
     }
 
@@ -482,20 +418,27 @@
                 headers: { 'Accept': 'application/json' }
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
-            var data = await res.json();
+            var json = await res.json();
             
-            // New API might return an array directly or a results object
+            // Expected format: { success: true, data: { results: [], total_pages: 123, total: 456 } }
             var results = [];
-            if (Array.isArray(data)) {
-                results = data;
-                totalPages = 10; // Assume 10 pages if array, or implement header check if needed
+            var totalCount = 0;
+            if (json.success && json.data) {
+                results = json.data.results || [];
+                totalPages = parseInt(json.data.total_pages) || 1;
+                totalCount = json.data.total || results.length;
+            } else if (Array.isArray(json)) {
+                results = json;
+                totalPages = 10;
+                totalCount = results.length;
             } else {
-                results = data.results || data.images || [];
-                totalPages = data.total_pages || 10;
+                results = json.results || json.images || [];
+                totalPages = json.total_pages || 10;
+                totalCount = json.total || results.length;
             }
             
             isUsingAPI = true;
-            renderGrid(results, 'api');
+            renderGrid(results, 'api', totalCount);
         } catch (e) {
             console.warn('API unavailable, using curated library:', e.message);
             showPreloaded(query);
@@ -533,6 +476,7 @@
         if (isUsingAPI) {
             fetchImages(currentQuery, currentPage);
         } else {
+            // Preloaded doesn't really have pages, but we can simulate or just stay
             showPreloaded(currentQuery);
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -546,10 +490,23 @@
     function openLightbox(src, caption, author) {
         document.getElementById('lightboxImg').src    = src;
         document.getElementById('lightboxCaption').textContent = caption;
-        document.getElementById('lightboxAuthor').textContent  = '📸 ' + author;
+        document.getElementById('lightboxAuthor').textContent  = '📸 ' + (author || 'Unknown');
         document.getElementById('lightbox').classList.add('open');
         document.body.style.overflow = 'hidden';
-        rememberRecentMedia({ src: src, title: caption, sub: 'Explore' });
+
+        // Track in Recent Floats
+        var recent = JSON.parse(localStorage.getItem('recent_floats') || '[]');
+        // Avoid duplicates
+        if (!recent.some(function(item) { return item.src === src; })) {
+            recent.unshift({
+                name: caption || 'Untitled Discovery',
+                type: 'Explore View',
+                time: 'Just now',
+                src: src,
+                timestamp: Date.now()
+            });
+            localStorage.setItem('recent_floats', JSON.stringify(recent.slice(0, 20)));
+        }
     }
 
     function closeLightbox(e) {
@@ -579,10 +536,9 @@
         }
     });
 
-    // ── Init: load immediately on DOMContentLoaded ────────────────────
+    // ── Init: load preloaded initially ────────────────────
     document.addEventListener('DOMContentLoaded', function() {
-        fetchImages(currentQuery, currentPage);
-        renderRecentMedia();
+        showPreloaded(currentQuery);
     });
     </script>
 </body>

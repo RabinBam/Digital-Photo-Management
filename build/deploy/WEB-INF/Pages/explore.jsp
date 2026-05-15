@@ -35,7 +35,6 @@
 
         .main-content {
             flex-grow: 1;
-            padding: 40px;
             overflow-y: auto;
             background-color: #f8fafb;
             display: flex;
@@ -236,6 +235,7 @@
                 </button>
             </div>
         </div>
+        <jsp:include page="../components/footer.jsp" />
     </main>
 
     <!-- Lightbox -->
@@ -327,7 +327,7 @@
     let isUsingAPI    = false;
 
     // ── Render ────────────────────────────────────────────────────────
-    function renderGrid(results, source) {
+    function renderGrid(results, source, totalFromApi) {
         const grid  = document.getElementById('exploreGrid');
         const empty = document.getElementById('exploreEmpty');
         const skel  = document.getElementById('skeletonLoader');
@@ -364,7 +364,7 @@
         });
 
         grid.style.display = '';
-        document.getElementById('totalCount').textContent = results.length + (source === 'api' ? '+' : '');
+        document.getElementById('totalCount').textContent = (totalFromApi || results.length);
         document.getElementById('explorePagination').style.display = 'flex';
         document.getElementById('pageIndicator').textContent = 'Page ' + currentPage;
         document.getElementById('prevBtn').disabled = currentPage <= 1;
@@ -377,7 +377,7 @@
         if (source === 'api') {
             el.innerHTML = '<i class="bi bi-circle-fill" style="color:#16a34a; font-size:8px;"></i> Live API via server';
         } else {
-            el.innerHTML = '<i class="bi bi-circle-fill" style="color:#2563eb; font-size:8px;"></i> Curated Library';
+            el.innerHTML = '<i class="bi bi-circle-fill" style="color:#2563eb; font-size:8px;"></i> Curated Library (Preloaded)';
         }
     }
 
@@ -418,20 +418,27 @@
                 headers: { 'Accept': 'application/json' }
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
-            var data = await res.json();
+            var json = await res.json();
             
-            // New API might return an array directly or a results object
+            // Expected format: { success: true, data: { results: [], total_pages: 123, total: 456 } }
             var results = [];
-            if (Array.isArray(data)) {
-                results = data;
-                totalPages = 10; // Assume 10 pages if array, or implement header check if needed
+            var totalCount = 0;
+            if (json.success && json.data) {
+                results = json.data.results || [];
+                totalPages = parseInt(json.data.total_pages) || 1;
+                totalCount = json.data.total || results.length;
+            } else if (Array.isArray(json)) {
+                results = json;
+                totalPages = 10;
+                totalCount = results.length;
             } else {
-                results = data.results || data.images || [];
-                totalPages = data.total_pages || 10;
+                results = json.results || json.images || [];
+                totalPages = json.total_pages || 10;
+                totalCount = json.total || results.length;
             }
             
             isUsingAPI = true;
-            renderGrid(results, 'api');
+            renderGrid(results, 'api', totalCount);
         } catch (e) {
             console.warn('API unavailable, using curated library:', e.message);
             showPreloaded(query);
@@ -469,6 +476,7 @@
         if (isUsingAPI) {
             fetchImages(currentQuery, currentPage);
         } else {
+            // Preloaded doesn't really have pages, but we can simulate or just stay
             showPreloaded(currentQuery);
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -482,9 +490,23 @@
     function openLightbox(src, caption, author) {
         document.getElementById('lightboxImg').src    = src;
         document.getElementById('lightboxCaption').textContent = caption;
-        document.getElementById('lightboxAuthor').textContent  = '📸 ' + author;
+        document.getElementById('lightboxAuthor').textContent  = '📸 ' + (author || 'Unknown');
         document.getElementById('lightbox').classList.add('open');
         document.body.style.overflow = 'hidden';
+
+        // Track in Recent Floats
+        var recent = JSON.parse(localStorage.getItem('recent_floats') || '[]');
+        // Avoid duplicates
+        if (!recent.some(function(item) { return item.src === src; })) {
+            recent.unshift({
+                name: caption || 'Untitled Discovery',
+                type: 'Explore View',
+                time: 'Just now',
+                src: src,
+                timestamp: Date.now()
+            });
+            localStorage.setItem('recent_floats', JSON.stringify(recent.slice(0, 20)));
+        }
     }
 
     function closeLightbox(e) {
@@ -514,9 +536,9 @@
         }
     });
 
-    // ── Init: load immediately on DOMContentLoaded ────────────────────
+    // ── Init: load preloaded initially ────────────────────
     document.addEventListener('DOMContentLoaded', function() {
-        fetchImages(currentQuery, currentPage);
+        showPreloaded(currentQuery);
     });
     </script>
 </body>

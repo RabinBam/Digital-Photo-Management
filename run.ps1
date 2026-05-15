@@ -1,8 +1,8 @@
 # Deployment Script for DigiPic
 # Usage: .\run.ps1
 
-$JAVA_HOME = "C:\Program Files\Java\jdk-21"
-$CATALINA_HOME = "D:\apache-tomcat-10.1.54"
+$JAVA_HOME = "C:\Program Files\Java\jdk-25.0.2"
+$CATALINA_HOME = "C:\Tomcat\apache-tomcat-11.0.18"
 $APP_NAME = "DigiPic"
 $SOURCE_ROOT = $PSScriptRoot
 $BUILD_DIR = "$SOURCE_ROOT\build"
@@ -35,13 +35,6 @@ if (Test-Path $LIB_DIR) {
     if ($extraJars) { $classpath += ";" + ($extraJars -join ";") }
 }
 
-# Collect JSTL from GymPulse (required for compilation if used, and for runtime)
-$gymPulseLib = "$CATALINA_HOME\webapps\GymPulse\WEB-INF\lib"
-if (Test-Path $gymPulseLib) {
-    $jstlJars = Get-ChildItem -Path $gymPulseLib -Filter "jakarta.servlet.jsp.jstl*" | ForEach-Object { $_.FullName }
-    if ($jstlJars) { $classpath += ";" + ($jstlJars -join ";") }
-}
-
 $javaFiles = Get-ChildItem -Path "$SOURCE_ROOT\src\main\java" -Recurse -Filter *.java | ForEach-Object { $_.FullName }
 
 if (-not $javaFiles) {
@@ -67,14 +60,7 @@ $classesTarget = "$deployDir\WEB-INF\classes"
 New-Item -ItemType Directory -Path $classesTarget -Force | Out-Null
 Copy-Item -Path "$CLASSES_DIR\*" -Destination $classesTarget -Recurse -Force
 
-# Ensure JSTL is in the deployment lib (Tomcat doesn't provide it)
-$libTarget = "$deployDir\WEB-INF\lib"
-if (-not (Test-Path $libTarget)) { New-Item -ItemType Directory -Path $libTarget -Force | Out-Null }
-if ($jstlJars) {
-    foreach ($jar in $jstlJars) {
-        Copy-Item -Path $jar -Destination $libTarget -Force
-    }
-}
+
 
 # 5. Deploy to Tomcat
 Write-Host "[3/4] Deploying to Tomcat..." -ForegroundColor Yellow
@@ -83,7 +69,10 @@ if (Test-Path $targetAppDir) {
     Write-Host "Removing old deployment..." -ForegroundColor Gray
     Remove-Item -Recurse -Force $targetAppDir
 }
-Copy-Item -Path $deployDir -Destination $targetAppDir -Recurse -Force
+if (-not (Test-Path $targetAppDir)) {
+    New-Item -ItemType Directory -Path $targetAppDir -Force | Out-Null
+}
+Copy-Item -Path "$deployDir\*" -Destination $targetAppDir -Recurse -Force
 Write-Host "Success: Deployed to $targetAppDir" -ForegroundColor Green
 
 # 6. Start Tomcat
@@ -99,5 +88,5 @@ Start-Process "$CATALINA_HOME\bin\startup.bat" -WindowStyle Minimized
 
 Write-Host "`n====================================================" -ForegroundColor Cyan
 Write-Host " Deployment Complete!" -ForegroundColor Green
-Write-Host " Application URL: http://localhost:8085/$APP_NAME" -ForegroundColor Cyan
+Write-Host " Application URL: http://localhost:8080/$APP_NAME" -ForegroundColor Cyan
 Write-Host "====================================================`n" -ForegroundColor Cyan

@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(urlPatterns = {"/gallery", "/albums", "/favorites", "/archived"})
+@WebServlet(urlPatterns = {"/gallery", "/albums", "/favorites", "/archived", "/about", "/contact"})
 public class MainController extends HttpServlet {
 
     @Override
@@ -50,19 +50,24 @@ public class MainController extends HttpServlet {
                 PhotoDAO photoDAO = new PhotoDAO();
                 List<Album> albums = albumDAO.findAlbumsByUserId(user.getUserId());
 
-                // BUG FIX: build photo counts in ONE query via countPhotosForAlbums()
-                // instead of calling findPhotosByAlbumId() inside albums.jsp in a loop (N+1)
-                Map<Integer, Integer> photoCounts = new LinkedHashMap<>();
+                Map<Integer, List<Photo>> albumPhotosMap = new LinkedHashMap<>();
                 for (Album a : albums) {
-                    photoCounts.put(a.getAlbumId(),
-                            photoDAO.findPhotosByAlbumId(a.getAlbumId()).size());
+                    albumPhotosMap.put(a.getAlbumId(), photoDAO.findPhotosByAlbumId(a.getAlbumId()));
                 }
 
                 request.setAttribute("albums", albums);
-                request.setAttribute("photoCounts", photoCounts);
+                request.setAttribute("albumPhotosMap", albumPhotosMap);
                 forward(request, response, "albums.jsp", "albums");
                 break;
             }
+
+            case "/about":
+                forward(request, response, "about.jsp", "about");
+                break;
+                
+            case "/contact":
+                forward(request, response, "contact.jsp", "contact");
+                break;
 
             case "/favorites":
             case "/archived":
@@ -99,14 +104,21 @@ public class MainController extends HttpServlet {
         UserDAO  uDAO = new UserDAO();
 
         if ("create".equalsIgnoreCase(action)) {
-            Album a = new Album();
-            a.setAlbumName(req.getParameter("albumName"));
-            a.setDescription(req.getParameter("description"));
-            a.setCoverImageUrl(req.getParameter("coverImageUrl"));
-            a.setUserId(user.getUserId());
-            int id = dao.createAlbum(a);
-            if (id > 0) {
-                uDAO.logAction(user.getUserId(), "Created album: " + a.getAlbumName());
+            // Enforce 3-album limit
+            int existingCount = dao.countAlbumsByUser(user.getUserId());
+            if (existingCount < 3) {
+                Album a = new Album();
+                a.setAlbumName(req.getParameter("albumName"));
+                a.setDescription(req.getParameter("description"));
+                a.setCoverImageUrl(req.getParameter("coverImageUrl"));
+                a.setUserId(user.getUserId());
+                int id = dao.createAlbum(a);
+                if (id > 0) {
+                    uDAO.logAction(user.getUserId(), "Created album: " + a.getAlbumName());
+                }
+            } else {
+                // Limit reached - we could set an error attribute or just ignore
+                req.getSession().setAttribute("albumError", "Album limit reached (Max 3).");
             }
         } else if ("delete".equalsIgnoreCase(action)) {
             try {

@@ -89,23 +89,29 @@ body {
 /* Main Content Area */
 .main-content {
     flex-grow: 1;
-    padding: 40px;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     background-color: var(--bg-base);
 }
 
+.page-container, .page-shell {
+    padding: 40px;
+    flex-grow: 1;
+}
 .header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    padding: 20px 30px;
-    background: var(--bg-surface);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    padding: 16px 40px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
-
 .search-bar {
     background: var(--bg-surface-light);
     border: 1px solid var(--border-color);

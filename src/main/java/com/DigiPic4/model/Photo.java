@@ -9,7 +9,6 @@ public class Photo {
     private String shutterSpeed;
     private String iso;
     private String focalLength;
-    private String locationTag;
 
     public int getPhotoId() { return photoId; }
     public void setPhotoId(int photoId) { this.photoId = photoId; }
@@ -34,7 +33,4 @@ public class Photo {
 
     public String getFocalLength() { return focalLength; }
     public void setFocalLength(String focalLength) { this.focalLength = focalLength; }
-
-    public String getLocationTag() { return locationTag; }
-    public void setLocationTag(String locationTag) { this.locationTag = locationTag; }
 }

@@ -42,7 +42,7 @@ public class LoginServlet extends HttpServlet {
         if (email == null || email.isBlank() || password == null || password.isBlank()) {
             req.setAttribute("error", "Please enter both email and password.");
             applyNoCache(res);
-            req.getRequestDispatcher("/login.jsp").forward(req, res);
+            req.getRequestDispatcher("/WEB-INF/Pages/login.jsp").forward(req, res);
             return;
         }
 
@@ -65,7 +65,7 @@ public class LoginServlet extends HttpServlet {
         } else {
             req.setAttribute("error", "Invalid credentials");
             applyNoCache(res);
-            req.getRequestDispatcher("/login.jsp").forward(req, res);
+            req.getRequestDispatcher("/WEB-INF/Pages/login.jsp").forward(req, res);
         }
     }
 
