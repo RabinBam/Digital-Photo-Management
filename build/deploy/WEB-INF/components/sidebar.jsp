@@ -2,6 +2,7 @@
 <%@ page import="com.DigiPic4.model.User" %>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/responsive.css">
 
 <%
     User sidebarUser = (User) session.getAttribute("user");
@@ -34,7 +35,15 @@
     if (initials.isEmpty()) initials = "U";
 %>
 
-<div class="sidebar">
+<!-- Mobile Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+<div class="sidebar" id="mainSidebar">
+    <!-- Mobile close button -->
+    <button class="sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Close menu">
+        <i class="bi bi-x-lg"></i>
+    </button>
+
     <div class="logo">MyVault<span>Personal Archive</span></div>
 
     <ul class="nav-links">
@@ -104,6 +113,25 @@
         </a>
     </div>
 </div>
+
+<script>
+/* ── Mobile Sidebar Toggle ─────────────────────────────── */
+function openMobileSidebar() {
+    var sidebar = document.getElementById('mainSidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) sidebar.classList.add('mobile-open');
+    if (overlay) overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMobileSidebar() {
+    var sidebar = document.getElementById('mainSidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+</script>
 
 <style>
     /* Critical Sidebar Layout */

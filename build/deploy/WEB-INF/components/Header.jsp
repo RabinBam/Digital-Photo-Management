@@ -41,6 +41,11 @@
 <!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
 <div class="header" id="mainHeader">
 
+    <!-- Mobile hamburger button -->
+    <button class="mobile-hamburger" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="bi bi-list"></i>
+    </button>
+
     <div class="header-left">
         <h1 class="page-title"><%= headerTitle %></h1>
         <p class="page-subtitle"><%= headerSubtitle %></p>
@@ -339,7 +344,7 @@
 
 /* ── Settings Scrim ───────────────────────────────────── */
 .settings-scrim {
-    display: none; position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.22);
+    display: none; position: fixed; inset: 0; z-index: 10002; background: rgba(0,0,0,0.22);
     backdrop-filter: blur(3px);
 }
 .settings-scrim.open { display: block; }
@@ -348,7 +353,7 @@
 .settings-panel {
     position: fixed; top: 0; right: -440px; width: 420px; height: 100vh;
     background: var(--bg-surface); border-left: 1px solid var(--border-color);
-    box-shadow: -12px 0 40px rgba(0,0,0,0.1); z-index: 400;
+    box-shadow: -12px 0 40px rgba(0,0,0,0.1); z-index: 10003;
     display: flex; flex-direction: column; overflow-y: auto;
     transition: right 0.32s cubic-bezier(.4,0,.2,1);
 }
@@ -499,7 +504,7 @@
 .notif-panel {
     display: none; position: fixed; top: 68px; right: 24px; width: 320px;
     background: var(--bg-surface); border: 1px solid var(--border-color);
-    border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.12); z-index: 500;
+    border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.12); z-index: 10003;
     overflow: hidden; animation: dropIn 0.18s ease;
 }
 @keyframes dropIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }

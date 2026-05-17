@@ -2,6 +2,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DigiPic - Sign Up</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
@@ -56,7 +58,7 @@
             display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%;
         }
         .auth-card {
-            background: var(--bg-surface); padding: 40px; border-radius: 16px; width: 450px;
+            background: var(--bg-surface); padding: 40px; border-radius: 16px; width: 100%; max-width: 450px;
             border: 1px solid rgba(103,232,249,0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
             backdrop-filter: blur(10px);
         }
@@ -75,6 +77,12 @@
         .auth-links { margin-top: 20px; text-align: center; font-size: 14px; color: var(--text-secondary); }
         .auth-links a { color: var(--accent-teal); text-decoration: none; }
         .auth-error { margin: 12px 0; font-size: 13px; color: #fca5a5; }
+        @media (max-width: 480px) {
+            .auth-card { padding: 28px 22px; }
+            .auth-card h2 { font-size: 24px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .auth-wrapper { padding: 16px; }
+        }
     </style>
 </head>
 <body>

@@ -2,6 +2,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DigiPic - Login</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css?v=<%= System.currentTimeMillis() %>">
     <style>
@@ -54,9 +56,10 @@
             position: relative;
             z-index: 2;
             display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%;
+            padding: 16px;
         }
         .auth-card {
-            background: var(--bg-surface); padding: 40px; border-radius: 16px; width: 400px;
+            background: var(--bg-surface); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px;
             border: 1px solid rgba(103,232,249,0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
             backdrop-filter: blur(10px);
         }
@@ -74,6 +77,10 @@
         .auth-links a { color: var(--accent-teal); text-decoration: none; }
         .auth-message { margin: 12px 0; font-size: 13px; color: #7dd3fc; }
         .auth-error { margin: 12px 0; font-size: 13px; color: #fca5a5; }
+        @media (max-width: 480px) {
+            .auth-card { padding: 28px 22px; }
+            .auth-card h2 { font-size: 24px; }
+        }
     </style>
 </head>
 <body>

@@ -20,6 +20,11 @@
 <!-- ═══════════════════════════════ ADMIN HEADER ═══════════════════════════════ -->
 <div class="header" id="adminHeader">
 
+    <!-- Mobile hamburger button -->
+    <button class="mobile-hamburger" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="bi bi-list"></i>
+    </button>
+
     <div class="header-left">
         <h1 class="page-title"><%= adminTitle %></h1>
         <p class="page-subtitle"><%= adminSubtitle %></p>
@@ -324,22 +329,23 @@
     }
 
     @media (max-width: 768px) {
-        .header-right {
-            width: 100%;
-            order: 3;
-        }
-
         .search-wrapper {
-            flex: 1;
-            width: 100%;
-        }
-
-        .search-bar {
-            width: 100%;
+            display: none !important;
         }
 
         .page-title {
-            font-size: 22px;
+            font-size: 18px;
+        }
+
+        .page-subtitle {
+            font-size: 9px;
+        }
+
+        .notif-panel {
+            right: 8px;
+            left: 8px;
+            width: auto;
+            top: 60px;
         }
     }
 </style>
